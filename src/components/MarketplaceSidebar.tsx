@@ -149,7 +149,18 @@ export const MarketplaceSidebar: React.FC<MarketplaceSidebarProps> = ({
                         }
                       `}
                       onClick={() => {
-                        onSectionChange(item.id);
+                        // Navigate to specific pages for certain sections
+                        if (item.id === 'analytics') {
+                          window.location.href = '/analytics';
+                        } else if (item.id === 'create') {
+                          window.location.href = '/create';
+                        } else if (item.id === 'games') {
+                          window.location.href = '/games';
+                        } else if (item.id === 'portfolio') {
+                          window.location.href = '/portfolio';
+                        } else {
+                          onSectionChange(item.id);
+                        }
                         onClose?.();
                       }}
                     >
