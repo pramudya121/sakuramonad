@@ -1287,6 +1287,20 @@ export class Web3Manager {
   getProvider(): ethers.BrowserProvider | null {
     return this.provider;
   }
+
+  async getCurrentAccount(): Promise<string | null> {
+    try {
+      if (!this.signer) return null;
+      return await this.signer.getAddress();
+    } catch (error) {
+      console.error('Failed to get current account:', error);
+      return null;
+    }
+  }
+
+  get isConnected(): boolean {
+    return this.provider !== null && this.signer !== null;
+  }
 }
 
 // Global instance

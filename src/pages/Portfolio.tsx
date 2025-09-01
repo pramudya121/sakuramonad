@@ -31,13 +31,13 @@ export default function Portfolio() {
   });
 
   useEffect(() => {
-    if (web3Manager.isConnected()) {
+    if (web3Manager.isConnected) {
       fetchPortfolioData();
     }
   }, []);
 
   const fetchPortfolioData = async () => {
-    const userAddress = web3Manager.getCurrentAccount();
+    const userAddress = await web3Manager.getCurrentAccount();
     if (!userAddress) return;
 
     setLoading(true);
@@ -109,7 +109,7 @@ export default function Portfolio() {
   };
 
   const addToWatchlist = async (tokenId: string) => {
-    const userAddress = web3Manager.getCurrentAccount();
+    const userAddress = await web3Manager.getCurrentAccount();
     if (!userAddress) return;
 
     try {
@@ -125,7 +125,7 @@ export default function Portfolio() {
   };
 
   const removeFromWatchlist = async (tokenId: string) => {
-    const userAddress = web3Manager.getCurrentAccount();
+    const userAddress = await web3Manager.getCurrentAccount();
     if (!userAddress) return;
 
     try {
@@ -141,7 +141,7 @@ export default function Portfolio() {
     }
   };
 
-  if (!web3Manager.isConnected()) {
+  if (!web3Manager.isConnected) {
     return (
       <div className="min-h-screen bg-background relative">
         <SakuraBackground />
@@ -272,21 +272,20 @@ export default function Portfolio() {
               </div>
             ) : ownedNFTs.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {ownedNFTs.map((nft) => (
-                  <NFTCard 
-                    key={nft.id}
-                    nft={{
-                      id: nft.id,
-                      name: nft.name,
-                      image: nft.image_url || '/placeholder.svg',
-                      price: nft.marketplace_listings?.[0]?.price || nft.nft_collections?.floor_price || '0',
-                      collection: nft.nft_collections?.name || 'Unknown',
-                      rarity: nft.rarity_rank ? `#${nft.rarity_rank}` : 'Common',
-                      likes: Math.floor(Math.random() * 100),
-                      lastSale: nft.nft_collections?.floor_price || '0'
-                    }}
-                  />
-                ))}
+                 {ownedNFTs.map((nft) => (
+                   <NFTCard 
+                     key={nft.id}
+                     id={nft.id}
+                     name={nft.name}
+                     image={nft.image_url || '/placeholder.svg'}
+                     price={nft.marketplace_listings?.[0]?.price || nft.nft_collections?.floor_price || '0'}
+                     collection={nft.nft_collections?.name || 'Unknown'}
+                     currency="MON"
+                     rarity={nft.rarity_rank ? `#${nft.rarity_rank}` : 'Common'}
+                     likes={Math.floor(Math.random() * 100)}
+                     lastSale={nft.nft_collections?.floor_price || '0'}
+                   />
+                 ))}
               </div>
             ) : (
               <div className="text-center py-12">
@@ -321,18 +320,17 @@ export default function Portfolio() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {watchlist.map((nft) => (
                   <div key={nft.id} className="relative">
-                    <NFTCard 
-                      nft={{
-                        id: nft.id,
-                        name: nft.name,
-                        image: nft.image_url || '/placeholder.svg',
-                        price: nft.marketplace_listings?.[0]?.price || nft.nft_collections?.floor_price || '0',
-                        collection: nft.nft_collections?.name || 'Unknown',
-                        rarity: nft.rarity_rank ? `#${nft.rarity_rank}` : 'Common',
-                        likes: Math.floor(Math.random() * 100),
-                        lastSale: nft.nft_collections?.floor_price || '0'
-                      }}
-                    />
+                     <NFTCard 
+                       id={nft.id}
+                       name={nft.name}
+                       image={nft.image_url || '/placeholder.svg'}
+                       price={nft.marketplace_listings?.[0]?.price || nft.nft_collections?.floor_price || '0'}
+                       collection={nft.nft_collections?.name || 'Unknown'}
+                       currency="MON"
+                       rarity={nft.rarity_rank ? `#${nft.rarity_rank}` : 'Common'}
+                       likes={Math.floor(Math.random() * 100)}
+                       lastSale={nft.nft_collections?.floor_price || '0'}
+                     />
                     <Button
                       variant="outline"
                       size="sm"

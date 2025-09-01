@@ -103,7 +103,7 @@ export default function CreateNFT() {
   };
 
   const handleMint = async () => {
-    if (!web3Manager.isConnected()) {
+    if (!web3Manager.isConnected) {
       toast.error('Please connect your wallet first');
       return;
     }
@@ -133,7 +133,7 @@ export default function CreateNFT() {
           contract_address: '0x' + Math.random().toString(16).substr(2, 40), // Placeholder
           name: formData.collectionName,
           symbol: formData.collectionSymbol,
-          creator_address: web3Manager.getCurrentAccount(),
+          creator_address: await web3Manager.getCurrentAccount(),
           royalty_percentage: formData.royaltyPercentage
         })
         .select()
@@ -148,7 +148,7 @@ export default function CreateNFT() {
           image_url: imagePreview,
           metadata_url: metadataUrl,
           attributes: attributes,
-          owner_address: web3Manager.getCurrentAccount()
+          owner_address: await web3Manager.getCurrentAccount()
         });
       }
 
