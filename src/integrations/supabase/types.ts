@@ -49,6 +49,33 @@ export type Database = {
           },
         ]
       }
+      blockchain_sync_state: {
+        Row: {
+          contract_address: string
+          created_at: string | null
+          event_type: string
+          id: string
+          last_processed_block: number
+          updated_at: string | null
+        }
+        Insert: {
+          contract_address: string
+          created_at?: string | null
+          event_type: string
+          id?: string
+          last_processed_block?: number
+          updated_at?: string | null
+        }
+        Update: {
+          contract_address?: string
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          last_processed_block?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       marketplace_analytics: {
         Row: {
           average_price: number | null
@@ -161,11 +188,13 @@ export type Database = {
       marketplace_listings: {
         Row: {
           amount: number | null
+          contract_address: string | null
           created_at: string
           id: string
           is_active: boolean | null
           is_erc1155: boolean | null
           listing_id: number
+          listing_type: string | null
           price: number
           seller_address: string
           token_id: string
@@ -174,11 +203,13 @@ export type Database = {
         }
         Insert: {
           amount?: number | null
+          contract_address?: string | null
           created_at?: string
           id?: string
           is_active?: boolean | null
           is_erc1155?: boolean | null
           listing_id: number
+          listing_type?: string | null
           price: number
           seller_address: string
           token_id: string
@@ -187,11 +218,13 @@ export type Database = {
         }
         Update: {
           amount?: number | null
+          contract_address?: string | null
           created_at?: string
           id?: string
           is_active?: boolean | null
           is_erc1155?: boolean | null
           listing_id?: number
+          listing_type?: string | null
           price?: number
           seller_address?: string
           token_id?: string
@@ -318,6 +351,7 @@ export type Database = {
         Row: {
           banner_url: string | null
           contract_address: string
+          contract_type: string | null
           created_at: string
           creator_address: string
           description: string | null
@@ -325,6 +359,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_verified: boolean | null
+          last_sync_block: number | null
           name: string
           royalty_percentage: number | null
           symbol: string | null
@@ -335,6 +370,7 @@ export type Database = {
         Insert: {
           banner_url?: string | null
           contract_address: string
+          contract_type?: string | null
           created_at?: string
           creator_address: string
           description?: string | null
@@ -342,6 +378,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_verified?: boolean | null
+          last_sync_block?: number | null
           name: string
           royalty_percentage?: number | null
           symbol?: string | null
@@ -352,6 +389,7 @@ export type Database = {
         Update: {
           banner_url?: string | null
           contract_address?: string
+          contract_type?: string | null
           created_at?: string
           creator_address?: string
           description?: string | null
@@ -359,6 +397,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_verified?: boolean | null
+          last_sync_block?: number | null
           name?: string
           royalty_percentage?: number | null
           symbol?: string | null
@@ -376,6 +415,7 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          last_sync_block: number | null
           metadata_url: string | null
           name: string
           owner_address: string
@@ -391,6 +431,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          last_sync_block?: number | null
           metadata_url?: string | null
           name: string
           owner_address: string
@@ -406,6 +447,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          last_sync_block?: number | null
           metadata_url?: string | null
           name?: string
           owner_address?: string
