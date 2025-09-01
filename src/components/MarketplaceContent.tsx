@@ -13,97 +13,19 @@ import {
   Grid3X3,
   Sparkles,
   Star,
-  Zap
+  Zap,
+  RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useMarketplaceData } from '@/hooks/useMarketplaceData';
+import { transactionService } from '@/lib/transactionService';
 
 interface MarketplaceContentProps {
   activeSection: string;
   connectedAddress?: string;
 }
 
-// Mock NFT data - replace with real data from contract
-const mockNFTs = [
-  {
-    id: '1',
-    image: 'https://via.placeholder.com/400x400/ff69b4/fff?text=Sakura+1',
-    name: 'Sakura Spirit #001',
-    collection: 'Sakura Spirits',
-    price: '0.15',
-    currency: 'MON',
-    rarity: 'Legendary',
-    likes: 24,
-    views: 156,
-    lastSale: '0.12 MON',
-    isLiked: false
-  },
-  {
-    id: '2',
-    image: 'https://via.placeholder.com/400x400/87ceeb/fff?text=Winter+2',
-    name: 'Winter Bloom #047',
-    collection: 'Winter Collection',
-    price: '0.08',
-    currency: 'MON',
-    rarity: 'Epic',
-    likes: 18,
-    views: 98,
-    isAuction: true,
-    timeLeft: '2h 15m',
-    isLiked: false
-  },
-  {
-    id: '3',
-    image: 'https://via.placeholder.com/400x400/dda0dd/fff?text=Petal+3',
-    name: 'Falling Petal #123',
-    collection: 'Sakura Spirits',
-    price: '0.25',
-    currency: 'MON',
-    rarity: 'Rare',
-    likes: 31,
-    views: 201,
-    lastSale: '0.20 MON',
-    isLiked: true
-  },
-  {
-    id: '4',
-    image: 'https://via.placeholder.com/400x400/ffc0cb/fff?text=Blossom+4',
-    name: 'Cherry Blossom Dreams',
-    collection: 'Dream Series',
-    price: '0.12',
-    currency: 'MON',
-    rarity: 'Uncommon',
-    likes: 12,
-    views: 76,
-    isAuction: true,
-    timeLeft: '1d 3h',
-    isLiked: false
-  },
-  {
-    id: '5',
-    image: 'https://via.placeholder.com/400x400/e6e6fa/fff?text=Snow+5',
-    name: 'Snow Garden #056',
-    collection: 'Winter Collection',
-    price: '0.18',
-    currency: 'MON',
-    rarity: 'Epic',
-    likes: 27,
-    views: 143,
-    isLiked: false
-  },
-  {
-    id: '6',
-    image: 'https://via.placeholder.com/400x400/ffb6c1/fff?text=Spirit+6',
-    name: 'Ethereal Spirit #789',
-    collection: 'Sakura Spirits',
-    price: '0.35',
-    currency: 'MON',
-    rarity: 'Legendary',
-    likes: 45,
-    views: 289,
-    lastSale: '0.28 MON',
-    isLiked: true
-  }
-];
+// Remove mock NFT data as we're now using real blockchain data
 
 const sectionContent = {
   marketplace: {
@@ -132,9 +54,15 @@ export const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
   activeSection,
   connectedAddress
 }) => {
-  const [nfts, setNfts] = useState(mockNFTs);
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('trending');
+  
+  // Use real marketplace data instead of mock data
+  const { nfts, stats, loading, error, refresh } = useMarketplaceData(
+    activeSection === 'bidding' ? 'auction' : 
+    activeSection === 'marketplace' ? filter : 
+    'all'
+  );
 
   const currentSection = sectionContent[activeSection as keyof typeof sectionContent] || sectionContent.marketplace;
   const SectionIcon = currentSection.icon;
@@ -146,32 +74,23 @@ export const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
     }
 
     const nft = nfts.find(n => n.id === nftId);
-    if (!nft) return;
+    if (!nft || !nft.listingId) {
+      toast.error('NFT not available for purchase');
+      return;
+    }
 
-    toast.loading('Processing purchase...', { id: 'buy-nft' });
+    // Use real transaction service for onchain purchase
+    const result = await transactionService.buyNFT(nft.listingId, nft.price);
     
-    try {
-      // Simulate transaction - replace with actual contract call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast.success(`Successfully purchased ${nft.name}!`, { 
-        id: 'buy-nft',
-        description: `You paid ${nft.price} ${nft.currency}`
-      });
-    } catch (error) {
-      toast.error('Purchase failed', { 
-        id: 'buy-nft',
-        description: 'Please try again'
-      });
+    if (result.status === 'success') {
+      // Refresh data after successful purchase
+      refresh();
     }
   };
 
   const handleLikeNFT = (nftId: string) => {
-    setNfts(prev => prev.map(nft => 
-      nft.id === nftId 
-        ? { ...nft, likes: nft.likes + (nft.isLiked ? -1 : 1), isLiked: !nft.isLiked }
-        : nft
-    ));
+    // TODO: Implement likes system with Supabase
+    toast.info('Likes system coming soon!');
   };
 
   const handleViewNFT = (nftId: string) => {
@@ -197,7 +116,7 @@ export const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
       case 'price-high':
         return parseFloat(b.price) - parseFloat(a.price);
       case 'recent':
-        return parseInt(b.id) - parseInt(a.id);
+        return parseInt(b.tokenId) - parseInt(a.tokenId);
       case 'popular':
         return b.likes - a.likes;
       default:
@@ -240,14 +159,26 @@ export const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
   return (
     <div className="space-y-6">
       {/* Section Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shadow-glow">
-          <SectionIcon className="w-5 h-5 text-primary-foreground" />
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shadow-glow">
+            <SectionIcon className="w-5 h-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">{currentSection.title}</h1>
+            <p className="text-muted-foreground">{currentSection.subtitle}</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{currentSection.title}</h1>
-          <p className="text-muted-foreground">{currentSection.subtitle}</p>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={refresh}
+          disabled={loading}
+          className="border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-smooth"
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -259,7 +190,7 @@ export const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
                 <TrendingUp className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-foreground">1,234</div>
+                <div className="text-2xl font-bold text-foreground">{stats.totalNFTs.toLocaleString()}</div>
                 <div className="text-xs text-muted-foreground">Total NFTs</div>
               </div>
             </div>
@@ -273,7 +204,7 @@ export const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
                 <Flame className="w-4 h-4 text-green-500" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-foreground">0.15</div>
+                <div className="text-2xl font-bold text-foreground">{stats.floorPrice.toFixed(3)}</div>
                 <div className="text-xs text-muted-foreground">Floor Price (MON)</div>
               </div>
             </div>
@@ -287,7 +218,7 @@ export const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
                 <Clock className="w-4 h-4 text-blue-500" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-foreground">150</div>
+                <div className="text-2xl font-bold text-foreground">{stats.volume24h.toFixed(1)}</div>
                 <div className="text-xs text-muted-foreground">24h Volume (MON)</div>
               </div>
             </div>
@@ -301,7 +232,7 @@ export const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
                 <Zap className="w-4 h-4 text-orange-500" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-foreground">45</div>
+                <div className="text-2xl font-bold text-foreground">{stats.liveAuctions}</div>
                 <div className="text-xs text-muted-foreground">Live Auctions</div>
               </div>
             </div>
@@ -362,29 +293,78 @@ export const MarketplaceContent: React.FC<MarketplaceContentProps> = ({
       </Card>
 
       {/* NFT Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {sortedNFTs.map((nft) => (
-          <NFTCard
-            key={nft.id}
-            {...nft}
-            onBuy={handleBuyNFT}
-            onLike={handleLikeNFT}
-            onView={handleViewNFT}
-          />
-        ))}
-      </div>
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Card key={i} className="bg-gradient-card border-border/50 animate-pulse">
+              <div className="aspect-square bg-muted rounded-t-lg"></div>
+              <CardContent className="p-4">
+                <div className="h-4 bg-muted rounded mb-2"></div>
+                <div className="h-3 bg-muted rounded mb-4 w-2/3"></div>
+                <div className="h-8 bg-muted rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : error ? (
+        <Card className="bg-gradient-card border-border/50">
+          <CardContent className="p-8 text-center">
+            <p className="text-muted-foreground mb-4">Failed to load NFTs: {error}</p>
+            <Button onClick={refresh} variant="outline">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      ) : sortedNFTs.length === 0 ? (
+        <Card className="bg-gradient-card border-border/50">
+          <CardContent className="p-8 text-center">
+            <p className="text-muted-foreground mb-4">No NFTs found matching your criteria</p>
+            <Button onClick={() => setFilter('all')} variant="outline">
+              Clear Filters
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {sortedNFTs.map((nft) => (
+            <NFTCard
+              key={nft.id}
+              id={nft.id}
+              image={nft.image}
+              name={nft.name}
+              collection={nft.collection}
+              price={nft.price}
+              currency={nft.currency}
+              rarity={nft.rarity}
+              likes={nft.likes}
+              views={nft.views}
+              lastSale={nft.lastSale}
+              isLiked={nft.isLiked}
+              isAuction={nft.isAuction}
+              timeLeft={nft.timeLeft}
+              onBuy={handleBuyNFT}
+              onLike={handleLikeNFT}
+              onView={handleViewNFT}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Load More */}
-      <div className="flex justify-center mt-8">
-        <Button
-          variant="outline"
-          size="lg"
-          className="border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-smooth"
-        >
-          <Grid3X3 className="w-4 h-4 mr-2" />
-          Load More NFTs
-        </Button>
-      </div>
+      {sortedNFTs.length > 0 && (
+        <div className="flex justify-center mt-8">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={refresh}
+            className="border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-smooth"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh Data
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
