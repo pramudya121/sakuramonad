@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { MarketplaceHeader } from '@/components/MarketplaceHeader';
 import { SakuraBackground } from '@/components/SakuraBackground';
 import { useWalletConnection } from '@/hooks/useWalletConnection';
+import { web3Manager } from '@/lib/web3';
 import {
   Upload,
   Palette,
@@ -104,9 +105,50 @@ export default function CreateNFT() {
   };
 
   const handleMint = async () => {
-    if (!isConnected) {
-      toast.error('Please connect your wallet first');
-      return;
+    console.log('Mint clicked - isConnected:', isConnected, 'address:', address);
+    
+    // Try to connect wallet if not connected, or ensure web3Manager is properly initialized
+    if (!isConnected || !address) {
+      console.log('Wallet not connected, attempting to connect...');
+      toast.info('Connecting wallet...');
+      
+      try {
+        // Check if wallet is available
+        if (!window.ethereum) {
+          toast.error('Please install MetaMask or another Web3 wallet');
+          return;
+        }
+
+        // Get accounts directly from wallet
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        console.log('Available accounts:', accounts);
+        
+        if (accounts.length === 0) {
+          // Request connection
+          const requestedAccounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          console.log('Requested accounts:', requestedAccounts);
+        }
+
+        // Ensure web3Manager is connected
+        if (!web3Manager.isConnected) {
+          console.log('Initializing web3Manager...');
+          await web3Manager.connectWallet('metamask');
+        }
+
+        const currentAccount = await web3Manager.getCurrentAccount();
+        console.log('Current web3Manager account:', currentAccount);
+        
+        if (!currentAccount) {
+          toast.error('Failed to connect wallet. Please try again.');
+          return;
+        }
+        
+        toast.success('Wallet connected successfully!');
+      } catch (error: any) {
+        console.error('Wallet connection error:', error);
+        toast.error('Failed to connect wallet: ' + error.message);
+        return;
+      }
     }
 
     try {
@@ -134,7 +176,7 @@ export default function CreateNFT() {
           contract_address: '0x' + Math.random().toString(16).substr(2, 40), // Placeholder
           name: formData.collectionName,
           symbol: formData.collectionSymbol,
-          creator_address: address,
+          creator_address: address || await web3Manager.getCurrentAccount(),
           royalty_percentage: formData.royaltyPercentage
         })
         .select()
@@ -149,7 +191,7 @@ export default function CreateNFT() {
           image_url: imagePreview,
           metadata_url: metadataUrl,
           attributes: attributes,
-          owner_address: address
+          owner_address: address || await web3Manager.getCurrentAccount()
         });
       }
 
