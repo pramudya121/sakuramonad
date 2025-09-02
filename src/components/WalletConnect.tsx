@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { web3Manager } from '@/lib/web3';
+import { useWalletConnection } from '@/hooks/useWalletConnection';
 import { Wallet, ChevronDown } from 'lucide-react';
 
 interface WalletConnectProps {
@@ -11,38 +11,13 @@ interface WalletConnectProps {
 }
 
 export const WalletConnect: React.FC<WalletConnectProps> = ({ onConnect }) => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [address, setAddress] = useState<string>('');
-  const [isConnecting, setIsConnecting] = useState(false);
+  const { isConnected, address, isConnecting, connectWallet: connect, disconnect: disconnectWallet } = useWalletConnection();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  useEffect(() => {
-    // Check if already connected
-    checkConnection();
-  }, []);
-
-  const checkConnection = async () => {
+  const handleConnect = async (walletType: 'metamask' | 'okx') => {
     try {
-      if ((window as any).ethereum) {
-        const accounts = await (window as any).ethereum.request({ method: 'eth_accounts' });
-        if (accounts.length > 0) {
-          setAddress(accounts[0]);
-          setIsConnected(true);
-          onConnect?.(accounts[0]);
-        }
-      }
-    } catch (error) {
-      console.error('Error checking connection:', error);
-    }
-  };
-
-  const connectWallet = async (walletType: 'metamask' | 'okx') => {
-    setIsConnecting(true);
-    try {
-      const connectedAddress = await web3Manager.connectWallet(walletType);
+      const connectedAddress = await connect(walletType);
       if (connectedAddress) {
-        setAddress(connectedAddress);
-        setIsConnected(true);
         setIsDialogOpen(false);
         onConnect?.(connectedAddress);
         toast.success(`${walletType} wallet connected successfully!`, {
@@ -54,14 +29,11 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({ onConnect }) => {
       toast.error(`Failed to connect ${walletType}`, {
         description: error.message || 'Please try again'
       });
-    } finally {
-      setIsConnecting(false);
     }
   };
 
-  const disconnect = () => {
-    setIsConnected(false);
-    setAddress('');
+  const handleDisconnect = () => {
+    disconnectWallet();
     toast.info('Wallet disconnected');
   };
 
@@ -69,7 +41,7 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({ onConnect }) => {
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
   };
 
-  if (isConnected) {
+  if (isConnected && address) {
     return (
       <div className="flex items-center gap-2">
         <Card className="bg-gradient-card border-border/50 shadow-soft">
@@ -85,7 +57,7 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({ onConnect }) => {
         <Button
           variant="outline"
           size="sm"
-          onClick={disconnect}
+          onClick={handleDisconnect}
           className="border-primary/20 hover:border-primary/40 transition-smooth"
         >
           Disconnect
@@ -114,7 +86,7 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({ onConnect }) => {
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <Button
-            onClick={() => connectWallet('metamask')}
+            onClick={() => handleConnect('metamask')}
             disabled={isConnecting}
             className="flex items-center justify-center gap-3 h-12 bg-gradient-card hover:bg-gradient-primary hover:text-primary-foreground border border-border/50 hover:border-primary/50 transition-smooth group"
             variant="outline"
@@ -127,7 +99,7 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({ onConnect }) => {
           </Button>
           
           <Button
-            onClick={() => connectWallet('okx')}
+            onClick={() => handleConnect('okx')}
             disabled={isConnecting}
             className="flex items-center justify-center gap-3 h-12 bg-gradient-card hover:bg-gradient-primary hover:text-primary-foreground border border-border/50 hover:border-primary/50 transition-smooth group"
             variant="outline"

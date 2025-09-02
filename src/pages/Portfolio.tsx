@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
-import { web3Manager } from '@/lib/web3';
+import { useWalletConnection } from '@/hooks/useWalletConnection';
 import { MarketplaceHeader } from '@/components/MarketplaceHeader';
 import { SakuraBackground } from '@/components/SakuraBackground';
 import { NFTCard } from '@/components/NFTCard';
@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 
 export default function Portfolio() {
+  const { isConnected, address } = useWalletConnection();
   const [ownedNFTs, setOwnedNFTs] = useState<any[]>([]);
   const [watchlist, setWatchlist] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,14 +32,13 @@ export default function Portfolio() {
   });
 
   useEffect(() => {
-    if (web3Manager.isConnected) {
+    if (isConnected && address) {
       fetchPortfolioData();
     }
-  }, []);
+  }, [isConnected, address]);
 
   const fetchPortfolioData = async () => {
-    const userAddress = await web3Manager.getCurrentAccount();
-    if (!userAddress) return;
+    if (!address) return;
 
     setLoading(true);
     try {
@@ -57,7 +57,7 @@ export default function Portfolio() {
             is_active
           )
         `)
-        .eq('owner_address', userAddress);
+        .eq('owner_address', address);
 
       // Fetch watchlist
       const { data: watchlistData } = await supabase
@@ -77,7 +77,7 @@ export default function Portfolio() {
             )
           )
         `)
-        .eq('user_address', userAddress);
+        .eq('user_address', address);
 
       setOwnedNFTs(owned || []);
       setWatchlist(watchlistData?.map(item => item.nft_tokens) || []);
@@ -109,12 +109,11 @@ export default function Portfolio() {
   };
 
   const addToWatchlist = async (tokenId: string) => {
-    const userAddress = await web3Manager.getCurrentAccount();
-    if (!userAddress) return;
+    if (!address) return;
 
     try {
       await supabase.from('user_watchlists').insert({
-        user_address: userAddress,
+        user_address: address,
         token_id: tokenId
       });
       
@@ -125,14 +124,13 @@ export default function Portfolio() {
   };
 
   const removeFromWatchlist = async (tokenId: string) => {
-    const userAddress = await web3Manager.getCurrentAccount();
-    if (!userAddress) return;
+    if (!address) return;
 
     try {
       await supabase
         .from('user_watchlists')
         .delete()
-        .eq('user_address', userAddress)
+        .eq('user_address', address)
         .eq('token_id', tokenId);
       
       fetchPortfolioData(); // Refresh data
@@ -141,7 +139,7 @@ export default function Portfolio() {
     }
   };
 
-  if (!web3Manager.isConnected) {
+  if (!isConnected) {
     return (
       <div className="min-h-screen bg-background relative">
         <SakuraBackground />

@@ -1,63 +1,38 @@
 import { useEffect, useState } from 'react';
 import { blockchainSync } from '@/lib/blockchainSync';
-import { transactionService } from '@/lib/transactionService';
+import { useWalletConnection } from '@/hooks/useWalletConnection';
 
 export function useBlockchainSync() {
-  const [isConnected, setIsConnected] = useState(false);
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const { isConnected, address, connectWallet } = useWalletConnection();
   const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
-    // Check if wallet is already connected
-    const checkConnection = async () => {
-      if (transactionService.isWalletConnected()) {
-        const address = await transactionService.getWalletAddress();
-        setWalletAddress(address);
-        setIsConnected(true);
-      }
-    };
+    // Start blockchain sync when wallet is connected
+    if (isConnected) {
+      const startSync = async () => {
+        setIsSyncing(true);
+        try {
+          await blockchainSync.startSync();
+          console.log('Blockchain sync started successfully');
+        } catch (error) {
+          console.error('Failed to start blockchain sync:', error);
+        } finally {
+          setIsSyncing(false);
+        }
+      };
 
-    checkConnection();
+      startSync();
+    }
 
-    // Start blockchain sync
-    const startSync = async () => {
-      setIsSyncing(true);
-      try {
-        await blockchainSync.startSync();
-        console.log('Blockchain sync started successfully');
-      } catch (error) {
-        console.error('Failed to start blockchain sync:', error);
-      } finally {
-        setIsSyncing(false);
-      }
-    };
-
-    startSync();
-
-    // Cleanup on unmount
+    // Cleanup on unmount or when wallet disconnects
     return () => {
       blockchainSync.stopSync();
     };
-  }, []);
-
-  const connectWallet = async () => {
-    try {
-      const address = await transactionService.connectWallet();
-      if (address) {
-        setWalletAddress(address);
-        setIsConnected(true);
-        return address;
-      }
-      return null;
-    } catch (error) {
-      console.error('Failed to connect wallet:', error);
-      return null;
-    }
-  };
+  }, [isConnected]);
 
   return {
     isConnected,
-    walletAddress,
+    walletAddress: address,
     isSyncing,
     connectWallet
   };

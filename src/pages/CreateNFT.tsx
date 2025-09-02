@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { MarketplaceHeader } from '@/components/MarketplaceHeader';
 import { SakuraBackground } from '@/components/SakuraBackground';
-import { web3Manager } from '@/lib/web3';
+import { useWalletConnection } from '@/hooks/useWalletConnection';
 import {
   Upload,
   Palette,
@@ -33,6 +33,7 @@ interface NFTMetadata {
 }
 
 export default function CreateNFT() {
+  const { isConnected, address } = useWalletConnection();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -103,7 +104,7 @@ export default function CreateNFT() {
   };
 
   const handleMint = async () => {
-    if (!web3Manager.isConnected) {
+    if (!isConnected) {
       toast.error('Please connect your wallet first');
       return;
     }
@@ -133,7 +134,7 @@ export default function CreateNFT() {
           contract_address: '0x' + Math.random().toString(16).substr(2, 40), // Placeholder
           name: formData.collectionName,
           symbol: formData.collectionSymbol,
-          creator_address: await web3Manager.getCurrentAccount(),
+          creator_address: address,
           royalty_percentage: formData.royaltyPercentage
         })
         .select()
@@ -148,7 +149,7 @@ export default function CreateNFT() {
           image_url: imagePreview,
           metadata_url: metadataUrl,
           attributes: attributes,
-          owner_address: await web3Manager.getCurrentAccount()
+          owner_address: address
         });
       }
 
