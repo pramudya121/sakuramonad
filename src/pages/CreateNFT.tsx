@@ -27,10 +27,8 @@ interface NFTMetadata {
   name: string;
   description: string;
   image: string;
-  attributes: Array<{
-    trait_type: string;
-    value: string;
-  }>;
+  supply: number;
+  price: number;
 }
 
 export default function CreateNFT() {
@@ -47,11 +45,9 @@ export default function CreateNFT() {
     collectionSymbol: '',
     royaltyPercentage: 5,
     supply: 1,
+    price: 0.01,
     tokenType: 'ERC721' // ERC721 or ERC1155
   });
-
-  const [attributes, setAttributes] = useState<Array<{trait_type: string, value: string}>>([]);
-  const [newAttribute, setNewAttribute] = useState({trait_type: '', value: ''});
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -63,17 +59,6 @@ export default function CreateNFT() {
       };
       reader.readAsDataURL(file);
     }
-  };
-
-  const addAttribute = () => {
-    if (newAttribute.trait_type && newAttribute.value) {
-      setAttributes([...attributes, newAttribute]);
-      setNewAttribute({trait_type: '', value: ''});
-    }
-  };
-
-  const removeAttribute = (index: number) => {
-    setAttributes(attributes.filter((_, i) => i !== index));
   };
 
   const uploadToIPFS = async (file: File): Promise<string> => {
@@ -95,7 +80,8 @@ export default function CreateNFT() {
       name: formData.name,
       description: formData.description,
       image: imageUrl,
-      attributes: attributes
+      supply: formData.supply,
+      price: formData.price
     };
 
     // Upload metadata to IPFS
@@ -190,7 +176,7 @@ export default function CreateNFT() {
           description: formData.description,
           image_url: imagePreview,
           metadata_url: metadataUrl,
-          attributes: attributes,
+          attributes: null,
           owner_address: address || await web3Manager.getCurrentAccount()
         });
       }
@@ -322,39 +308,38 @@ export default function CreateNFT() {
               </div>
             </div>
 
-            {/* Attributes */}
+            {/* NFT Supply and Price */}
             <div className="space-y-4">
-              <Label>Attributes (Optional)</Label>
-              <div className="space-y-3">
-                {attributes.map((attr, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-gradient-subtle rounded-lg border border-border/50">
-                    <Badge variant="secondary">{attr.trait_type}</Badge>
-                    <span className="text-sm text-foreground">{attr.value}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeAttribute(index)}
-                      className="ml-auto"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-                
-                <div className="flex gap-2">
+              <Label>NFT Details</Label>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="nftSupply">Supply</Label>
                   <Input
-                    placeholder="Trait type (e.g., Color)"
-                    value={newAttribute.trait_type}
-                    onChange={(e) => setNewAttribute({...newAttribute, trait_type: e.target.value})}
+                    id="nftSupply"
+                    type="number"
+                    min="1"
+                    placeholder="1"
+                    value={formData.supply}
+                    onChange={(e) => setFormData({...formData, supply: parseInt(e.target.value) || 1})}
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Number of copies to mint
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="nftPrice">Price (ETH)</Label>
                   <Input
-                    placeholder="Value (e.g., Blue)"
-                    value={newAttribute.value}
-                    onChange={(e) => setNewAttribute({...newAttribute, value: e.target.value})}
+                    id="nftPrice"
+                    type="number"
+                    min="0"
+                    step="0.001"
+                    placeholder="0.01"
+                    value={formData.price}
+                    onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value) || 0.01})}
                   />
-                  <Button variant="outline" onClick={addAttribute}>
-                    <Plus className="w-4 h-4" />
-                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Initial listing price
+                  </p>
                 </div>
               </div>
             </div>
@@ -484,13 +469,13 @@ export default function CreateNFT() {
                     collectionSymbol: '',
                     royaltyPercentage: 5,
                     supply: 1,
+                    price: 0.01,
                     tokenType: 'ERC721'
                   });
-                  setAttributes([]);
                   setImageFile(null);
                   setImagePreview('');
                 }}
-                className="bg-gradient-primary hover:shadow-glow"
+                 className="bg-gradient-primary hover:shadow-glow"
               >
                 Create Another NFT
               </Button>
