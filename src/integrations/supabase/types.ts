@@ -407,6 +407,35 @@ export type Database = {
         }
         Relationships: []
       }
+      nft_likes: {
+        Row: {
+          created_at: string
+          id: string
+          token_id: string
+          user_address: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          token_id: string
+          user_address: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          token_id?: string
+          user_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nft_likes_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "nft_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nft_tokens: {
         Row: {
           attributes: Json | null
