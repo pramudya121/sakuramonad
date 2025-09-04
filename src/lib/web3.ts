@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 
 // Monad Testnet Configuration
 export const MONAD_TESTNET = {
-  chainId: '0x2797', // 10143 in hex
+  chainId: '0x279F', // 10143 in hex
   chainName: 'Monad Testnet',
   nativeCurrency: {
     name: 'MON',
