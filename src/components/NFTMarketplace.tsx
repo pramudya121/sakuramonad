@@ -179,17 +179,36 @@ export const NFTMarketplace: React.FC<NFTMarketplaceProps> = ({
     setTransactionLoading(nft.id);
 
     try {
-      // Simulate blockchain transaction
-      toast.info('Processing purchase transaction...');
+      // Import transaction service for real on-chain transactions
+      const { transactionService } = await import('@/lib/transactionService');
       
-      // In a real implementation, you would:
-      // 1. Call the marketplace contract's buy function
-      // 2. Wait for transaction confirmation
-      // 3. Update the database with new ownership
-      
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate transaction time
+      // Connect wallet if not already connected
+      if (!transactionService.isWalletConnected()) {
+        const connectedAddress = await transactionService.connectWallet();
+        if (!connectedAddress) {
+          throw new Error('Failed to connect wallet for transaction');
+        }
+      }
 
-      // Update ownership in database
+      toast.info('Submitting purchase transaction to Monad testnet...', {
+        description: 'Please confirm the transaction in your wallet'
+      });
+
+      // Execute real blockchain transaction
+      const result = await transactionService.buyNFT(
+        activeListing.listing_id, 
+        activeListing.price.toString()
+      );
+
+      if (result.status !== 'success') {
+        throw new Error(result.error || 'Transaction failed');
+      }
+
+      toast.success('Transaction confirmed on blockchain!', {
+        description: `Hash: ${result.hash}`
+      });
+
+      // Update ownership in database after successful on-chain transaction
       await supabase
         .from('nft_tokens')
         .update({ owner_address: address })
@@ -201,7 +220,7 @@ export const NFTMarketplace: React.FC<NFTMarketplaceProps> = ({
         .update({ is_active: false })
         .eq('token_id', nft.id);
 
-      // Record transaction
+      // Record transaction with real hash
       await supabase
         .from('marketplace_transactions')
         .insert({
@@ -210,15 +229,18 @@ export const NFTMarketplace: React.FC<NFTMarketplaceProps> = ({
           to_address: address,
           price: activeListing.price,
           transaction_type: 'purchase',
-          transaction_hash: '0x' + Math.random().toString(16).substr(2, 64), // Placeholder
-          block_number: Math.floor(Math.random() * 1000000)
+          transaction_hash: result.hash!,
+          block_number: 0, // Will be updated by blockchain sync
+          status: 'confirmed'
         });
 
       toast.success('NFT purchased successfully!');
       fetchNFTs(); // Refresh the list
-    } catch (error) {
+    } catch (error: any) {
       console.error('Purchase error:', error);
-      toast.error('Failed to purchase NFT');
+      toast.error('Failed to purchase NFT', {
+        description: error.message
+      });
     } finally {
       setTransactionLoading(null);
     }
@@ -236,25 +258,64 @@ export const NFTMarketplace: React.FC<NFTMarketplaceProps> = ({
     }
 
     try {
-      toast.info('Submitting offer...');
+      // Import transaction service for real on-chain transactions
+      const { transactionService } = await import('@/lib/transactionService');
+      
+      // Connect wallet if not already connected
+      if (!transactionService.isWalletConnected()) {
+        const connectedAddress = await transactionService.connectWallet();
+        if (!connectedAddress) {
+          throw new Error('Failed to connect wallet for transaction');
+        }
+      }
 
+      toast.info('Submitting offer transaction to Monad testnet...', {
+        description: 'Please confirm the transaction in your wallet'
+      });
+
+      // Execute real blockchain transaction
+      const contractAddress = nft.nft_collections?.contract_address || '0x0000000000000000000000000000000000000000';
+      const isERC1155 = nft.nft_collections?.contract_type === 'ERC1155';
+      
+      const result = await transactionService.makeOffer(
+        contractAddress,
+        nft.token_id,
+        offerAmount,
+        24, // 24 hours expiry
+        isERC1155
+      );
+
+      if (result.status !== 'success') {
+        throw new Error(result.error || 'Transaction failed');
+      }
+
+      toast.success('Offer transaction confirmed on blockchain!', {
+        description: `Hash: ${result.hash}`
+      });
+
+      // Store offer in database with real transaction hash
       await supabase
         .from('marketplace_offers')
         .insert({
           token_id: nft.id,
           buyer_address: address,
           price: parseFloat(offerAmount),
-          offer_id: Math.floor(Math.random() * 1000000), // Placeholder
-          expiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
-          transaction_hash: '0x' + Math.random().toString(16).substr(2, 64) // Placeholder
+          offer_id: Math.floor(Math.random() * 1000000),
+          expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
+          transaction_hash: result.hash!,
+          amount: 1,
+          is_erc1155: isERC1155,
+          is_active: true
         });
 
       toast.success('Offer submitted successfully!');
       setOfferAmount('');
       setSelectedNFT(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Offer error:', error);
-      toast.error('Failed to submit offer');
+      toast.error('Failed to submit offer', {
+        description: error.message
+      });
     }
   };
 
