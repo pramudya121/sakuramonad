@@ -1137,6 +1137,7 @@ export class Web3Manager {
   private signer: ethers.JsonRpcSigner | null = null;
   private marketplaceContract: ethers.Contract | null = null;
 
+  // Connect to wallet and switch to Monad Testnet - Requires wallet confirmation
   async connectWallet(walletType: 'metamask' | 'okx'): Promise<string | null> {
     try {
       let ethereum: any;
@@ -1151,7 +1152,7 @@ export class Web3Manager {
         throw new Error(`${walletType} wallet not found`);
       }
 
-      // Request account access
+      // Request account access - This triggers wallet confirmation popup
       const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
       
       if (accounts.length === 0) {
@@ -1162,7 +1163,7 @@ export class Web3Manager {
       this.provider = new ethers.BrowserProvider(ethereum);
       this.signer = await this.provider.getSigner();
 
-      // Add/Switch to Monad Testnet
+      // Add/Switch to Monad Testnet - This triggers network switch confirmation
       await this.switchToMonadTestnet(ethereum);
 
       // Initialize marketplace contract
@@ -1198,11 +1199,20 @@ export class Web3Manager {
     }
   }
 
+  // List ERC721 NFT - Requires wallet confirmation  
   async listNFT721(nftContract: string, tokenId: string, price: string): Promise<string> {
     if (!this.marketplaceContract) throw new Error('Marketplace contract not initialized');
     
     const priceInWei = ethers.parseEther(price);
+    // This transaction will trigger wallet confirmation popup
     const tx = await this.marketplaceContract.list721(nftContract, tokenId, priceInWei);
+    
+    console.log('Transaction submitted:', tx.hash);
+    
+    // Wait for confirmation - shows pending status to user
+    const receipt = await tx.wait();
+    console.log('Transaction confirmed:', receipt.transactionHash);
+    
     return tx.hash;
   }
 
@@ -1214,18 +1224,29 @@ export class Web3Manager {
     return tx.hash;
   }
 
+  // Buy NFT - Requires wallet confirmation
   async buyNFT(listingId: string, amount: string, totalPrice: string): Promise<string> {
     if (!this.marketplaceContract) throw new Error('Marketplace contract not initialized');
     
     const priceInWei = ethers.parseEther(totalPrice);
+    // This transaction will trigger wallet confirmation popup 
     const tx = await this.marketplaceContract.buy(listingId, amount, { value: priceInWei });
+    
+    console.log('Purchase transaction submitted:', tx.hash);
+    
+    // Wait for confirmation
+    const receipt = await tx.wait();
+    console.log('Purchase transaction confirmed:', receipt.transactionHash);
+    
     return tx.hash;
   }
 
+  // Make offer - Requires wallet confirmation
   async makeOffer(nftContract: string, tokenId: string, amount: string, expiry: number, isERC1155: boolean, offerPrice: string): Promise<string> {
     if (!this.marketplaceContract) throw new Error('Marketplace contract not initialized');
     
     const priceInWei = ethers.parseEther(offerPrice);
+    // This transaction will trigger wallet confirmation popup
     const tx = await this.marketplaceContract.makeOffer(
       nftContract,
       tokenId,
@@ -1234,6 +1255,13 @@ export class Web3Manager {
       isERC1155,
       { value: priceInWei }
     );
+    
+    console.log('Offer transaction submitted:', tx.hash);
+    
+    // Wait for confirmation
+    const receipt = await tx.wait();
+    console.log('Offer transaction confirmed:', receipt.transactionHash);
+    
     return tx.hash;
   }
 

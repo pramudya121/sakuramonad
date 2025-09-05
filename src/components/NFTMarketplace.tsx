@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useWalletConnection } from '@/hooks/useWalletConnection';
+import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 import { web3Manager } from '@/lib/web3';
 import { Heart, ShoppingCart, Tag, Eye, Share2, Loader2 } from 'lucide-react';
 
@@ -44,11 +45,11 @@ export const NFTMarketplace: React.FC<NFTMarketplaceProps> = ({
   limit = 12 
 }) => {
   const { isConnected, address, connectWallet } = useWalletConnection();
+  const { executeTransaction, status, hash, error, isLoading, resetState } = useTransactionStatus();
   const [nfts, setNfts] = useState<NFT[]>([]);
   const [loading, setLoading] = useState(true);
   const [offerAmount, setOfferAmount] = useState('');
   const [selectedNFT, setSelectedNFT] = useState<NFT | null>(null);
-  const [transactionLoading, setTransactionLoading] = useState<string | null>(null);
 
   const fetchNFTs = async () => {
     try {
@@ -80,7 +81,6 @@ export const NFTMarketplace: React.FC<NFTMarketplaceProps> = ({
       }
 
       const { data, error } = await query;
-
       if (error) throw error;
 
       // Fetch likes count for each NFT
@@ -91,7 +91,6 @@ export const NFTMarketplace: React.FC<NFTMarketplaceProps> = ({
             .select('*', { count: 'exact', head: true })
             .eq('token_id', nft.id);
 
-          // Check if current user liked this NFT
           let isLiked = false;
           if (address) {
             const { data: userLike } = await supabase
@@ -120,54 +119,10 @@ export const NFTMarketplace: React.FC<NFTMarketplaceProps> = ({
     }
   };
 
-  const handleLike = async (nftId: string) => {
-    if (!isConnected) {
-      toast.error('Please connect your wallet first');
-      return;
-    }
-
-    try {
-      const nft = nfts.find(n => n.id === nftId);
-      if (!nft) return;
-
-      if (nft.is_liked) {
-        // Unlike
-        await supabase
-          .from('nft_likes')
-          .delete()
-          .eq('token_id', nftId)
-          .eq('user_address', address);
-
-        setNfts(nfts.map(n => n.id === nftId ? {
-          ...n,
-          is_liked: false,
-          likes_count: (n.likes_count || 1) - 1
-        } : n));
-      } else {
-        // Like
-        await supabase
-          .from('nft_likes')
-          .insert({
-            token_id: nftId,
-            user_address: address
-          });
-
-        setNfts(nfts.map(n => n.id === nftId ? {
-          ...n,
-          is_liked: true,
-          likes_count: (n.likes_count || 0) + 1
-        } : n));
-      }
-    } catch (error) {
-      console.error('Error handling like:', error);
-      toast.error('Failed to update like');
-    }
-  };
-
   const handleBuyNFT = async (nft: NFT) => {
-    if (!isConnected) {
-      const connected = await connectWallet();
-      if (!connected) return;
+    if (!isConnected || !address) {
+      toast.error('Please connect your wallet');
+      return;
     }
 
     const activeListing = nft.marketplace_listings?.find(l => l.is_active);
@@ -176,80 +131,48 @@ export const NFTMarketplace: React.FC<NFTMarketplaceProps> = ({
       return;
     }
 
-    setTransactionLoading(nft.id);
+    resetState();
+    
+    await executeTransaction(
+      async () => {
+        toast.info('Preparing purchase transaction...', { id: 'buy-tx' });
+        
+        // Execute real on-chain transaction - This will trigger MetaMask/OKX confirmation
+        const txHash = await web3Manager.buyNFT(
+          activeListing.listing_id.toString(),
+          "1", // amount
+          activeListing.price.toString()
+        );
 
-    try {
-      // Import transaction service for real on-chain transactions
-      const { transactionService } = await import('@/lib/transactionService');
-      
-      // Connect wallet if not already connected
-      if (!transactionService.isWalletConnected()) {
-        const connectedAddress = await transactionService.connectWallet();
-        if (!connectedAddress) {
-          throw new Error('Failed to connect wallet for transaction');
-        }
-      }
-
-      toast.info('Submitting purchase transaction to Monad testnet...', {
-        description: 'Please confirm the transaction in your wallet'
-      });
-
-      // Execute real blockchain transaction
-      const result = await transactionService.buyNFT(
-        activeListing.listing_id, 
-        activeListing.price.toString()
-      );
-
-      if (result.status !== 'success') {
-        throw new Error(result.error || 'Transaction failed');
-      }
-
-      toast.success('Transaction confirmed on blockchain!', {
-        description: `Hash: ${result.hash}`
-      });
-
-      // Update ownership in database after successful on-chain transaction
-      await supabase
-        .from('nft_tokens')
-        .update({ owner_address: address })
-        .eq('id', nft.id);
-
-      // Deactivate listing
-      await supabase
-        .from('marketplace_listings')
-        .update({ is_active: false })
-        .eq('token_id', nft.id);
-
-      // Record transaction with real hash
-      await supabase
-        .from('marketplace_transactions')
-        .insert({
-          token_id: nft.id,
-          from_address: nft.owner_address,
-          to_address: address,
-          price: activeListing.price,
+        return txHash;
+      },
+      async (txHash) => {
+        toast.success(`Purchase confirmed! Transaction: ${txHash.slice(0, 10)}...`, { id: 'buy-tx' });
+        
+        // Update database after successful transaction
+        await supabase.from('marketplace_transactions').insert({
+          transaction_hash: txHash,
           transaction_type: 'purchase',
-          transaction_hash: result.hash!,
-          block_number: 0, // Will be updated by blockchain sync
+          from_address: address,
+          to_address: nft.owner_address || '',
+          price: activeListing.price,
+          token_id: nft.id,
+          block_number: 0,
           status: 'confirmed'
         });
 
-      toast.success('NFT purchased successfully!');
-      fetchNFTs(); // Refresh the list
-    } catch (error: any) {
-      console.error('Purchase error:', error);
-      toast.error('Failed to purchase NFT', {
-        description: error.message
-      });
-    } finally {
-      setTransactionLoading(null);
-    }
+        fetchNFTs();
+      },
+      (error) => {
+        toast.error(error.message || 'Purchase failed', { id: 'buy-tx' });
+      }
+    );
   };
 
-  const handleMakeOffer = async (nft: NFT) => {
-    if (!isConnected) {
-      const connected = await connectWallet();
-      if (!connected) return;
+  const handleMakeOffer = async (nft: NFT, offerAmount: string) => {
+    if (!isConnected || !address) {
+      toast.error('Please connect your wallet');
+      return;
     }
 
     if (!offerAmount || parseFloat(offerAmount) <= 0) {
@@ -257,99 +180,47 @@ export const NFTMarketplace: React.FC<NFTMarketplaceProps> = ({
       return;
     }
 
-    try {
-      // Import transaction service for real on-chain transactions
-      const { transactionService } = await import('@/lib/transactionService');
-      
-      // Connect wallet if not already connected
-      if (!transactionService.isWalletConnected()) {
-        const connectedAddress = await transactionService.connectWallet();
-        if (!connectedAddress) {
-          throw new Error('Failed to connect wallet for transaction');
-        }
-      }
+    resetState();
+    
+    await executeTransaction(
+      async () => {
+        toast.info('Preparing offer transaction...', { id: 'offer-tx' });
 
-      toast.info('Submitting offer transaction to Monad testnet...', {
-        description: 'Please confirm the transaction in your wallet'
-      });
+        const txHash = await web3Manager.makeOffer(
+          nft.nft_collections?.contract_address || '',
+          nft.token_id || '',
+          "1",
+          Math.floor(Date.now() / 1000) + (24 * 60 * 60),
+          false,
+          offerAmount
+        );
 
-      // Execute real blockchain transaction
-      const contractAddress = nft.nft_collections?.contract_address || '0x0000000000000000000000000000000000000000';
-      const isERC1155 = nft.nft_collections?.contract_type === 'ERC1155';
-      
-      const result = await transactionService.makeOffer(
-        contractAddress,
-        nft.token_id,
-        offerAmount,
-        24, // 24 hours expiry
-        isERC1155
-      );
-
-      if (result.status !== 'success') {
-        throw new Error(result.error || 'Transaction failed');
-      }
-
-      toast.success('Offer transaction confirmed on blockchain!', {
-        description: `Hash: ${result.hash}`
-      });
-
-      // Store offer in database with real transaction hash
-      await supabase
-        .from('marketplace_offers')
-        .insert({
+        return txHash;
+      },
+      async (txHash) => {
+        toast.success(`Offer confirmed! Transaction: ${txHash.slice(0, 10)}...`, { id: 'offer-tx' });
+        
+        await supabase.from('marketplace_offers').insert({
+          offer_id: Math.floor(Math.random() * 1000000),
           token_id: nft.id,
           buyer_address: address,
           price: parseFloat(offerAmount),
-          offer_id: Math.floor(Math.random() * 1000000),
-          expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
-          transaction_hash: result.hash!,
           amount: 1,
-          is_erc1155: isERC1155,
+          expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          is_erc1155: false,
+          transaction_hash: txHash,
           is_active: true
         });
 
-      toast.success('Offer submitted successfully!');
-      setOfferAmount('');
-      setSelectedNFT(null);
-    } catch (error: any) {
-      console.error('Offer error:', error);
-      toast.error('Failed to submit offer', {
-        description: error.message
-      });
-    }
+        setOfferAmount('');
+        setSelectedNFT(null);
+        fetchNFTs();
+      },
+      (error) => {
+        toast.error(error.message || 'Failed to make offer', { id: 'offer-tx' });
+      }
+    );
   };
-
-  // Set up real-time updates
-  useEffect(() => {
-    const channel = supabase
-      .channel('nft-marketplace-changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'nft_tokens'
-      }, () => {
-        fetchNFTs();
-      })
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'marketplace_listings'
-      }, () => {
-        fetchNFTs();
-      })
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'nft_likes'
-      }, () => {
-        fetchNFTs();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
 
   useEffect(() => {
     fetchNFTs();
@@ -372,24 +243,12 @@ export const NFTMarketplace: React.FC<NFTMarketplaceProps> = ({
         return (
           <Card key={nft.id} className="group hover:shadow-glow transition-all duration-300 bg-gradient-card border-border/50">
             <CardContent className="p-4">
-              {/* NFT Image */}
               <div className="relative aspect-square mb-4 rounded-lg overflow-hidden">
                 <img
                   src={nft.image_url || '/placeholder.svg'}
                   alt={nft.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <div className="absolute top-2 right-2 flex gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="bg-black/50 text-white hover:bg-black/70"
-                    onClick={() => handleLike(nft.id)}
-                  >
-                    <Heart className={`w-4 h-4 ${nft.is_liked ? 'fill-red-500 text-red-500' : ''}`} />
-                    <span className="ml-1 text-xs">{nft.likes_count || 0}</span>
-                  </Button>
-                </div>
                 {isOwner && (
                   <div className="absolute top-2 left-2">
                     <Badge variant="secondary" className="bg-green-500/80 text-white">
@@ -399,55 +258,42 @@ export const NFTMarketplace: React.FC<NFTMarketplaceProps> = ({
                 )}
               </div>
 
-              {/* NFT Info */}
               <div className="space-y-2">
-                <div className="flex justify-between items-start">
-                  <h3 className="font-semibold text-foreground line-clamp-1">{nft.name}</h3>
-                  <Badge variant="outline" className="text-xs">
-                    {nft.nft_collections?.contract_type || 'ERC721'}
-                  </Badge>
-                </div>
-                
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {nft.description}
-                </p>
-                
-                <p className="text-xs text-muted-foreground">
-                  Collection: {nft.nft_collections?.name || 'Unknown'}
-                </p>
+                <h3 className="font-semibold text-foreground line-clamp-1">{nft.name}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-2">{nft.description}</p>
 
                 {activeListing && (
                   <div className="flex justify-between items-center py-2 px-3 bg-gradient-subtle rounded-lg">
                     <span className="text-sm text-muted-foreground">Price:</span>
-                    <span className="font-bold text-primary">{activeListing.price} ETH</span>
+                    <span className="font-bold text-primary">{activeListing.price} MON</span>
                   </div>
                 )}
 
-                {/* Action Buttons */}
                 <div className="flex gap-2 pt-2">
                   {activeListing && !isOwner && (
                     <>
                       <Button
                         onClick={() => handleBuyNFT(nft)}
-                        disabled={transactionLoading === nft.id}
                         className="flex-1 bg-gradient-primary hover:shadow-glow"
+                        disabled={!isConnected || isLoading}
                       >
-                        {transactionLoading === nft.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            {status === 'pending' ? 'Confirm in Wallet...' : 
+                             status === 'submitted' ? 'Processing...' : 'Buy Now'}
+                          </>
                         ) : (
                           <>
-                            <ShoppingCart className="w-4 h-4 mr-1" />
-                            Buy
+                            <ShoppingCart className="w-4 h-4 mr-2" />
+                            Buy Now
                           </>
                         )}
                       </Button>
                       
-                      <Dialog>
+                      <Dialog open={selectedNFT?.id === nft.id} onOpenChange={(open) => !open && setSelectedNFT(null)}>
                         <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            onClick={() => setSelectedNFT(nft)}
-                          >
+                          <Button variant="outline" onClick={() => setSelectedNFT(nft)}>
                             <Tag className="w-4 h-4" />
                           </Button>
                         </DialogTrigger>
@@ -457,63 +303,37 @@ export const NFTMarketplace: React.FC<NFTMarketplaceProps> = ({
                           </DialogHeader>
                           <div className="space-y-4">
                             <div>
-                              <label className="text-sm font-medium">Offer Amount (ETH)</label>
+                              <label className="text-sm font-medium">Offer Amount (MON)</label>
                               <Input
                                 type="number"
-                                step="0.01"
-                                placeholder="0.1"
+                                step="0.001"
                                 value={offerAmount}
                                 onChange={(e) => setOfferAmount(e.target.value)}
+                                placeholder="Enter offer amount"
                               />
                             </div>
                             <Button
-                              onClick={() => handleMakeOffer(nft)}
+                              onClick={() => handleMakeOffer(nft, offerAmount)}
                               className="w-full bg-gradient-primary hover:shadow-glow"
+                              disabled={!offerAmount || parseFloat(offerAmount) <= 0 || isLoading}
                             >
-                              Submit Offer
+                              {isLoading ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  {status === 'pending' ? 'Confirm in Wallet...' : 
+                                   status === 'submitted' ? 'Processing...' : 'Make Offer'}
+                                </>
+                              ) : (
+                                <>
+                                  <Tag className="w-4 h-4 mr-2" />
+                                  Make Offer
+                                </>
+                              )}
                             </Button>
                           </div>
                         </DialogContent>
                       </Dialog>
                     </>
-                  )}
-                  
-                  {!activeListing && !isOwner && (
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="flex-1"
-                          onClick={() => setSelectedNFT(nft)}
-                        >
-                          <Tag className="w-4 h-4 mr-1" />
-                          Make Offer
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Make an Offer</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <label className="text-sm font-medium">Offer Amount (ETH)</label>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              placeholder="0.1"
-                              value={offerAmount}
-                              onChange={(e) => setOfferAmount(e.target.value)}
-                            />
-                          </div>
-                          <Button
-                            onClick={() => handleMakeOffer(nft)}
-                            className="w-full bg-gradient-primary hover:shadow-glow"
-                          >
-                            Submit Offer
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
                   )}
                 </div>
               </div>

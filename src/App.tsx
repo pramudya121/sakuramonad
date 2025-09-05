@@ -8,6 +8,9 @@ import Analytics from "./pages/Analytics";
 import CreateNFT from "./pages/CreateNFT";
 import Games from "./pages/Games";
 import Portfolio from "./pages/Portfolio";
+import Explore from "./pages/Explore";
+import LiveFeed from "./pages/LiveFeed";
+import Trending from "./pages/Trending";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,6 +23,9 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/explore" element={<Explore />} />
+          <Route path="/live-feed" element={<LiveFeed />} />
+          <Route path="/trending" element={<Trending />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/create" element={<CreateNFT />} />
           <Route path="/games" element={<Games />} />

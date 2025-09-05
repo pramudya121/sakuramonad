@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { MarketplaceHeader } from '@/components/MarketplaceHeader';
 import { SakuraBackground } from '@/components/SakuraBackground';
 import { useWalletConnection } from '@/hooks/useWalletConnection';
+import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 import { web3Manager } from '@/lib/web3';
 import {
   Upload,
