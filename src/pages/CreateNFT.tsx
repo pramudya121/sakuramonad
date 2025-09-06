@@ -12,8 +12,7 @@ import { MarketplaceHeader } from '@/components/MarketplaceHeader';
 import { SakuraBackground } from '@/components/SakuraBackground';
 import { useWalletConnection } from '@/hooks/useWalletConnection';
 import { useTransactionStatus } from '@/hooks/useTransactionStatus';
-import { web3Manager } from '@/lib/web3';
-import { smartContractService } from '@/lib/smartContracts';
+import { contractManager } from '@/lib/contracts';
 import {
   Upload,
   Palette,
@@ -35,10 +34,12 @@ interface NFTMetadata {
 
 export default function CreateNFT() {
   const { isConnected, address } = useWalletConnection();
+  const transactionStatus = useTransactionStatus();
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [deployedContractAddress, setDeployedContractAddress] = useState<string>('');
+  const [mintedTokenId, setMintedTokenId] = useState<string>('');
   
   const [formData, setFormData] = useState({
     name: '',
@@ -92,124 +93,196 @@ export default function CreateNFT() {
     return await uploadToIPFS(metadataFile);
   };
 
-  const { executeTransaction, status, error: txError, isLoading: txLoading } = useTransactionStatus();
-
   const handleMint = async () => {
     console.log('Mint clicked - isConnected:', isConnected, 'address:', address);
     
+    // Try to connect wallet if not connected
     if (!isConnected || !address) {
       console.log('Wallet not connected, attempting to connect...');
       toast.info('Please connect your wallet to mint NFT');
       return;
     }
 
-    if (!formData.collectionName || !formData.collectionSymbol) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
     try {
-      setLoading(true);
+      // Reset any previous transaction state
+      transactionStatus.resetState();
       
-      // Step 1: Upload to IPFS (simulation for now)
-      toast.info('Uploading to IPFS...', { id: 'mint-process' });
-      const metadataUrl = await createMetadata();
-      
-      // Step 2: Real blockchain minting process
-      toast.info('Deploying NFT Collection...', { 
-        id: 'mint-process',
-        description: 'Please confirm the transaction in MetaMask/OKX Wallet'
-      });
-
-      // Deploy collection contract and mint NFT
-      await executeTransaction(
+      await transactionStatus.executeTransaction(
         async () => {
-          // Deploy NFT collection contract
-          const collectionAddress = await smartContractService.deployNFTCollection(
+          // Step 1: Upload to IPFS
+          toast.info('Uploading to IPFS...', { id: 'mint-process' });
+          const metadataUrl = await createMetadata();
+          
+          // Step 2: Deploy NFT Collection Contract
+          toast.info('Deploying NFT collection contract...', { 
+            id: 'mint-process',
+            description: 'Please confirm the transaction in your wallet'
+          });
+          
+          const { contractAddress, txHash: deployTxHash } = await contractManager.deployNFTCollection(
             formData.collectionName,
-            formData.collectionSymbol
+            formData.collectionSymbol,
+            formData.royaltyPercentage
           );
           
-          // Mint the NFT
-          const mintResult = await smartContractService.mintNFT(collectionAddress, metadataUrl);
+          setDeployedContractAddress(contractAddress);
           
-          // Save collection to database
-          const { data: collection, error: collectionError } = await supabase
-            .from('nft_collections')
-            .insert({
-              contract_address: collectionAddress,
-              name: formData.collectionName,
-              symbol: formData.collectionSymbol,
-              creator_address: address,
-              royalty_percentage: formData.royaltyPercentage,
-              contract_type: formData.tokenType,
-              description: `Collection for ${formData.name}`,
-              total_supply: formData.supply
-            })
-            .select()
-            .single();
-
-          if (collectionError) throw collectionError;
-
-          // Save NFT token to database
-          const { error: tokenError } = await supabase
-            .from('nft_tokens')
-            .insert({
-              collection_id: collection.id,
-              token_id: mintResult.tokenId,
-              name: formData.name,
-              description: formData.description,
-              image_url: imagePreview,
-              metadata_url: metadataUrl,
-              attributes: null,
-              owner_address: address
-            });
-            
-          if (tokenError) throw tokenError;
-
-          // Record minting transaction
-          const { error: txError } = await supabase
-            .from('marketplace_transactions')
-            .insert({
-              transaction_hash: mintResult.hash,
-              from_address: '0x0000000000000000000000000000000000000000',
-              to_address: address,
-              transaction_type: 'mint',
-              block_number: Math.floor(Math.random() * 1000000), // Will be updated by blockchain sync
-              amount: formData.supply,
-              status: 'confirmed'
-            });
-            
-          if (txError) throw txError;
-
-          return mintResult.hash;
-        },
-        (hash: string) => {
-          toast.success('NFT minted successfully on Monad testnet!', {
+          toast.success('Collection contract deployed!', { 
             id: 'mint-process',
-            description: `Transaction: ${hash}`
+            description: `Contract: ${contractAddress}`
           });
-          setStep(3); // Success step
+          
+          // Step 3: Mint NFT
+          toast.info('Minting NFT...', { 
+            id: 'mint-process',
+            description: 'Please confirm the minting transaction in your wallet'
+          });
+          
+          const { tokenId, txHash: mintTxHash } = await contractManager.mintNFT(
+            contractAddress,
+            address,
+            metadataUrl
+          );
+          
+          setMintedTokenId(tokenId);
+          
+          return mintTxHash; // Return the final transaction hash
+        },
+        async (hash: string) => {
+          // On success callback - save to database
+          try {
+            // Save collection to database
+            const { data: collection, error: collectionError } = await supabase
+              .from('nft_collections')
+              .upsert({
+                contract_address: deployedContractAddress,
+                name: formData.collectionName,
+                symbol: formData.collectionSymbol,
+                creator_address: address,
+                royalty_percentage: formData.royaltyPercentage,
+                contract_type: formData.tokenType,
+                description: `Collection for ${formData.name}`,
+                total_supply: formData.supply
+              })
+              .select()
+              .single();
+
+            if (collectionError) throw collectionError;
+
+            if (collection) {
+              // Save NFT token to database
+              const { error: tokenError } = await supabase
+                .from('nft_tokens')
+                .insert({
+                  collection_id: collection.id,
+                  token_id: mintedTokenId,
+                  name: formData.name,
+                  description: formData.description,
+                  image_url: imagePreview,
+                  metadata_url: await createMetadata(),
+                  attributes: null,
+                  owner_address: address
+                });
+                
+              if (tokenError) throw tokenError;
+
+              // Record minting transaction
+              const { error: txError } = await supabase
+                .from('marketplace_transactions')
+                .insert({
+                  transaction_hash: hash,
+                  from_address: '0x0000000000000000000000000000000000000000', // Zero address for minting
+                  to_address: address,
+                  transaction_type: 'mint',
+                  block_number: Math.floor(Math.random() * 1000000),
+                  amount: formData.supply,
+                  status: 'confirmed'
+                });
+                
+              if (txError) throw txError;
+            }
+
+            toast.success('NFT minted successfully on Monad testnet!', {
+              description: `Transaction: ${hash}`
+            });
+            
+            setStep(3); // Success step
+          } catch (dbError: any) {
+            console.error('Database error:', dbError);
+            toast.error('NFT minted but failed to save to database', {
+              description: dbError.message
+            });
+          }
         },
         (error: Error) => {
+          // On error callback
           console.error('Minting error:', error);
           toast.error('Failed to mint NFT', {
-            id: 'mint-process',
-            description: error.message.includes('rejected') 
-              ? 'Transaction was rejected by user' 
-              : error.message
+            description: error.message
           });
         }
       );
       
     } catch (error: any) {
-      console.error('Minting setup error:', error);
-      toast.error('Failed to setup minting', {
+      console.error('Outer minting error:', error);
+      toast.error('Failed to start minting process', {
         description: error.message
       });
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const renderTransactionStatus = () => {
+    if (transactionStatus.status === 'idle') return null;
+    
+    return (
+      <div className="mt-4 p-4 bg-gradient-subtle rounded-lg border border-border/50">
+        <div className="flex items-center gap-2">
+          {transactionStatus.status === 'pending' && (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              <span className="text-sm">Preparing transaction...</span>
+            </>
+          )}
+          {transactionStatus.status === 'submitted' && (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              <span className="text-sm">Transaction submitted, waiting for confirmation...</span>
+            </>
+          )}
+          {transactionStatus.status === 'confirmed' && (
+            <>
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              <span className="text-sm text-green-600">Transaction confirmed!</span>
+            </>
+          )}
+          {transactionStatus.status === 'failed' && (
+            <>
+              <X className="w-4 h-4 text-red-500" />
+              <span className="text-sm text-red-600">Transaction failed</span>
+            </>
+          )}
+        </div>
+        
+        {transactionStatus.hash && (
+          <div className="mt-2">
+            <a 
+              href={`https://testnet-explorer.monad.xyz/tx/${transactionStatus.hash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-primary hover:underline"
+            >
+              View on Monad Explorer: {transactionStatus.hash.slice(0, 10)}...
+            </a>
+          </div>
+        )}
+        
+        {transactionStatus.error && (
+          <div className="mt-2 text-xs text-red-600">
+            {transactionStatus.error}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const renderStep = () => {
@@ -429,26 +502,26 @@ export default function CreateNFT() {
               </div>
             </div>
 
+            {renderTransactionStatus()}
+
             <div className="flex justify-between pt-6">
               <Button variant="outline" onClick={() => setStep(1)}>
                 Back
               </Button>
               <Button
                 onClick={handleMint}
-                disabled={!formData.collectionName || !formData.collectionSymbol || loading || txLoading}
+                disabled={!formData.collectionName || !formData.collectionSymbol || transactionStatus.isLoading}
                 className="bg-gradient-primary hover:shadow-glow"
               >
-                {loading || txLoading ? (
+                {transactionStatus.isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {status === 'pending' ? 'Confirm in Wallet...' : 
-                     status === 'submitted' ? 'Processing...' : 
-                     'Minting...'}
+                    Minting...
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4 mr-2" />
-                    Mint NFT
+                    Mint NFT on Monad
                   </>
                 )}
               </Button>
@@ -463,7 +536,7 @@ export default function CreateNFT() {
             <div>
               <h2 className="text-2xl font-bold text-foreground">NFT Minted Successfully!</h2>
               <p className="text-muted-foreground mt-2">
-                Your NFT has been created and is now available on the marketplace
+                Your NFT has been created and is now available on the Monad blockchain
               </p>
             </div>
             
@@ -475,6 +548,16 @@ export default function CreateNFT() {
               />
               <h3 className="font-semibold text-foreground">{formData.name}</h3>
               <p className="text-sm text-muted-foreground">{formData.collectionName}</p>
+              {deployedContractAddress && (
+                <p className="text-xs text-primary mt-2">
+                  Contract: {deployedContractAddress.slice(0, 10)}...
+                </p>
+              )}
+              {mintedTokenId && (
+                <p className="text-xs text-muted-foreground">
+                  Token ID: {mintedTokenId}
+                </p>
+              )}
             </div>
 
             <div className="flex gap-3 justify-center">
@@ -496,6 +579,9 @@ export default function CreateNFT() {
                   });
                   setImageFile(null);
                   setImagePreview('');
+                  setDeployedContractAddress('');
+                  setMintedTokenId('');
+                  transactionStatus.resetState();
                 }}
                  className="bg-gradient-primary hover:shadow-glow"
               >
