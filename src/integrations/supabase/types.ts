@@ -495,6 +495,36 @@ export type Database = {
           },
         ]
       }
+      smart_contracts: {
+        Row: {
+          abi: Json | null
+          contract_address: string
+          contract_type: string
+          created_at: string
+          id: string
+          network: string
+          updated_at: string
+        }
+        Insert: {
+          abi?: Json | null
+          contract_address: string
+          contract_type: string
+          created_at?: string
+          id?: string
+          network?: string
+          updated_at?: string
+        }
+        Update: {
+          abi?: Json | null
+          contract_address?: string
+          contract_type?: string
+          created_at?: string
+          id?: string
+          network?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_watchlists: {
         Row: {
           collection_id: string | null
