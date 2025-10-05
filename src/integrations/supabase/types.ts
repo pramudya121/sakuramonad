@@ -14,7 +14,410 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      auction_bids: {
+        Row: {
+          auction_id: string
+          bid_amount: number
+          bidder_address: string
+          created_at: string
+          id: string
+          transaction_hash: string | null
+        }
+        Insert: {
+          auction_id: string
+          bid_amount: number
+          bidder_address: string
+          created_at?: string
+          id?: string
+          transaction_hash?: string | null
+        }
+        Update: {
+          auction_id?: string
+          bid_amount?: number
+          bidder_address?: string
+          created_at?: string
+          id?: string
+          transaction_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auction_bids_auction_id_fkey"
+            columns: ["auction_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_auctions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blockchain_sync_state: {
+        Row: {
+          contract_address: string
+          event_type: string
+          id: string
+          last_processed_block: number
+          updated_at: string
+        }
+        Insert: {
+          contract_address: string
+          event_type: string
+          id?: string
+          last_processed_block?: number
+          updated_at?: string
+        }
+        Update: {
+          contract_address?: string
+          event_type?: string
+          id?: string
+          last_processed_block?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketplace_auctions: {
+        Row: {
+          amount: number
+          auction_id: number
+          created_at: string
+          end_time: string
+          highest_bid: number
+          id: string
+          is_erc1155: boolean
+          is_settled: boolean
+          reserve_price: number
+          seller_address: string
+          start_time: string
+          token_id: string
+          transaction_hash: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          auction_id: number
+          created_at?: string
+          end_time: string
+          highest_bid?: number
+          id?: string
+          is_erc1155?: boolean
+          is_settled?: boolean
+          reserve_price: number
+          seller_address: string
+          start_time: string
+          token_id: string
+          transaction_hash?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          auction_id?: number
+          created_at?: string
+          end_time?: string
+          highest_bid?: number
+          id?: string
+          is_erc1155?: boolean
+          is_settled?: boolean
+          reserve_price?: number
+          seller_address?: string
+          start_time?: string
+          token_id?: string
+          transaction_hash?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_auctions_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "nft_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_listings: {
+        Row: {
+          amount: number
+          contract_address: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          is_erc1155: boolean
+          listing_id: number
+          listing_type: string
+          price: number
+          seller_address: string
+          token_id: string
+          transaction_hash: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          contract_address?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_erc1155?: boolean
+          listing_id: number
+          listing_type?: string
+          price?: number
+          seller_address: string
+          token_id: string
+          transaction_hash?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          contract_address?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_erc1155?: boolean
+          listing_id?: number
+          listing_type?: string
+          price?: number
+          seller_address?: string
+          token_id?: string
+          transaction_hash?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_listings_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "nft_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_offers: {
+        Row: {
+          amount: number
+          buyer_address: string
+          created_at: string
+          expiry: string
+          id: string
+          is_active: boolean
+          is_erc1155: boolean
+          offer_id: number
+          price: number
+          token_id: string
+          transaction_hash: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          buyer_address: string
+          created_at?: string
+          expiry: string
+          id?: string
+          is_active?: boolean
+          is_erc1155?: boolean
+          offer_id: number
+          price: number
+          token_id: string
+          transaction_hash?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          buyer_address?: string
+          created_at?: string
+          expiry?: string
+          id?: string
+          is_active?: boolean
+          is_erc1155?: boolean
+          offer_id?: number
+          price?: number
+          token_id?: string
+          transaction_hash?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_offers_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "nft_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_transactions: {
+        Row: {
+          amount: number | null
+          block_number: number | null
+          created_at: string
+          from_address: string | null
+          id: string
+          price: number | null
+          status: string
+          to_address: string | null
+          token_id: string | null
+          transaction_hash: string
+          transaction_type: string
+        }
+        Insert: {
+          amount?: number | null
+          block_number?: number | null
+          created_at?: string
+          from_address?: string | null
+          id?: string
+          price?: number | null
+          status?: string
+          to_address?: string | null
+          token_id?: string | null
+          transaction_hash: string
+          transaction_type: string
+        }
+        Update: {
+          amount?: number | null
+          block_number?: number | null
+          created_at?: string
+          from_address?: string | null
+          id?: string
+          price?: number | null
+          status?: string
+          to_address?: string | null
+          token_id?: string | null
+          transaction_hash?: string
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_transactions_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "nft_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nft_collections: {
+        Row: {
+          contract_address: string
+          contract_type: Database["public"]["Enums"]["contract_type"] | null
+          created_at: string
+          creator_address: string | null
+          description: string | null
+          id: string
+          last_sync_block: number | null
+          name: string | null
+          royalty_percentage: number | null
+          symbol: string | null
+          total_supply: number | null
+          updated_at: string
+        }
+        Insert: {
+          contract_address: string
+          contract_type?: Database["public"]["Enums"]["contract_type"] | null
+          created_at?: string
+          creator_address?: string | null
+          description?: string | null
+          id?: string
+          last_sync_block?: number | null
+          name?: string | null
+          royalty_percentage?: number | null
+          symbol?: string | null
+          total_supply?: number | null
+          updated_at?: string
+        }
+        Update: {
+          contract_address?: string
+          contract_type?: Database["public"]["Enums"]["contract_type"] | null
+          created_at?: string
+          creator_address?: string | null
+          description?: string | null
+          id?: string
+          last_sync_block?: number | null
+          name?: string | null
+          royalty_percentage?: number | null
+          symbol?: string | null
+          total_supply?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      nft_likes: {
+        Row: {
+          created_at: string
+          id: string
+          token_id: string
+          user_address: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          token_id: string
+          user_address: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          token_id?: string
+          user_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nft_likes_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "nft_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nft_tokens: {
+        Row: {
+          attributes: Json | null
+          collection_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          last_sync_block: number | null
+          metadata_url: string | null
+          name: string | null
+          owner_address: string | null
+          token_id: string
+          updated_at: string
+        }
+        Insert: {
+          attributes?: Json | null
+          collection_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          last_sync_block?: number | null
+          metadata_url?: string | null
+          name?: string | null
+          owner_address?: string | null
+          token_id: string
+          updated_at?: string
+        }
+        Update: {
+          attributes?: Json | null
+          collection_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          last_sync_block?: number | null
+          metadata_url?: string | null
+          name?: string | null
+          owner_address?: string | null
+          token_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nft_tokens_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "nft_collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +426,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      contract_type: "ERC721" | "ERC1155"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +553,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      contract_type: ["ERC721", "ERC1155"],
+    },
   },
 } as const
