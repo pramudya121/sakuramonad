@@ -73,6 +73,56 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_analytics: {
+        Row: {
+          average_price: number | null
+          collection_id: string | null
+          created_at: string | null
+          daily_sales: number | null
+          daily_volume: number | null
+          date: string
+          floor_price: number | null
+          id: string
+          unique_buyers: number | null
+          unique_sellers: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          average_price?: number | null
+          collection_id?: string | null
+          created_at?: string | null
+          daily_sales?: number | null
+          daily_volume?: number | null
+          date?: string
+          floor_price?: number | null
+          id?: string
+          unique_buyers?: number | null
+          unique_sellers?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          average_price?: number | null
+          collection_id?: string | null
+          created_at?: string | null
+          daily_sales?: number | null
+          daily_volume?: number | null
+          date?: string
+          floor_price?: number | null
+          id?: string
+          unique_buyers?: number | null
+          unique_sellers?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_analytics_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "nft_collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_auctions: {
         Row: {
           amount: number
@@ -299,6 +349,7 @@ export type Database = {
           creator_address: string | null
           description: string | null
           id: string
+          image_url: string | null
           last_sync_block: number | null
           name: string | null
           royalty_percentage: number | null
@@ -313,6 +364,7 @@ export type Database = {
           creator_address?: string | null
           description?: string | null
           id?: string
+          image_url?: string | null
           last_sync_block?: number | null
           name?: string | null
           royalty_percentage?: number | null
@@ -327,6 +379,7 @@ export type Database = {
           creator_address?: string | null
           description?: string | null
           id?: string
+          image_url?: string | null
           last_sync_block?: number | null
           name?: string | null
           royalty_percentage?: number | null
@@ -414,6 +467,35 @@ export type Database = {
             columns: ["collection_id"]
             isOneToOne: false
             referencedRelation: "nft_collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_watchlists: {
+        Row: {
+          created_at: string | null
+          id: string
+          token_id: string
+          user_address: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          token_id: string
+          user_address: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          token_id?: string
+          user_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_watchlists_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "nft_tokens"
             referencedColumns: ["id"]
           },
         ]
