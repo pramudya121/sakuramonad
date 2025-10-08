@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MarketplaceHeader } from '@/components/MarketplaceHeader';
 import { SakuraBackground } from '@/components/SakuraBackground';
 import { NFTMarketplace } from '@/components/NFTMarketplace';
@@ -6,9 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, TrendingUp, Clock, Heart } from 'lucide-react';
+import { Search, Filter, TrendingUp, Clock, Heart, Home } from 'lucide-react';
 
 export default function Explore() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [filterBy, setFilterBy] = useState('all');
@@ -19,6 +21,15 @@ export default function Explore() {
       <MarketplaceHeader />
       
       <main className="container mx-auto px-4 py-8 relative z-10">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/')}
+          className="mb-6 border-border/50 hover:border-primary/50"
+        >
+          <Home className="w-4 h-4 mr-2" />
+          Back to Home
+        </Button>
+
         {/* Page Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4">

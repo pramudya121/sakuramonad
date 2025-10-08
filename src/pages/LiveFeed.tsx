@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MarketplaceHeader } from '@/components/MarketplaceHeader';
 import { SakuraBackground } from '@/components/SakuraBackground';
 import { NFTMarketplace } from '@/components/NFTMarketplace';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
-import { Activity, TrendingUp, Users, Zap } from 'lucide-react';
+import { Activity, TrendingUp, Users, Zap, Home } from 'lucide-react';
 
 interface LiveActivity {
   id: string;
@@ -19,6 +21,7 @@ interface LiveActivity {
 }
 
 export default function LiveFeed() {
+  const navigate = useNavigate();
   const [liveActivities, setLiveActivities] = useState<LiveActivity[]>([]);
   const [stats, setStats] = useState({
     totalVolume: 0,
@@ -224,6 +227,15 @@ export default function LiveFeed() {
       <MarketplaceHeader />
       
       <main className="container mx-auto px-4 py-8 relative z-10">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/')}
+          className="mb-6 border-border/50 hover:border-primary/50"
+        >
+          <Home className="w-4 h-4 mr-2" />
+          Back to Home
+        </Button>
+
         {/* Page Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4">

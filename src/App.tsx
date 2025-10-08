@@ -11,6 +11,7 @@ import Portfolio from "./pages/Portfolio";
 import Explore from "./pages/Explore";
 import LiveFeed from "./pages/LiveFeed";
 import Trending from "./pages/Trending";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/create" element={<CreateNFT />} />
           <Route path="/games" element={<Games />} />
           <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/profile" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

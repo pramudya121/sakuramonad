@@ -140,7 +140,6 @@ export const NFTMarketplace: React.FC<NFTMarketplaceProps> = ({
         // Execute real on-chain transaction - This will trigger MetaMask/OKX confirmation
         const txHash = await web3Manager.buyNFT(
           activeListing.listing_id.toString(),
-          "1", // amount
           activeListing.price.toString()
         );
 

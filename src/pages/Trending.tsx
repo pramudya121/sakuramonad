@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MarketplaceHeader } from '@/components/MarketplaceHeader';
 import { SakuraBackground } from '@/components/SakuraBackground';
 import { NFTMarketplace } from '@/components/NFTMarketplace';
@@ -6,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TrendingUp, TrendingDown, Crown, Award, Star, Flame } from 'lucide-react';
+import { TrendingUp, TrendingDown, Crown, Award, Star, Flame, Home } from 'lucide-react';
 
 const trendingCollections = [
   {
@@ -57,6 +58,7 @@ const trendingCollections = [
 ];
 
 export default function Trending() {
+  const navigate = useNavigate();
   const [timeframe, setTimeframe] = useState('24h');
 
   const getRankIcon = (rank: number) => {
@@ -74,6 +76,15 @@ export default function Trending() {
       <MarketplaceHeader />
       
       <main className="container mx-auto px-4 py-8 relative z-10">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/')}
+          className="mb-6 border-border/50 hover:border-primary/50"
+        >
+          <Home className="w-4 h-4 mr-2" />
+          Back to Home
+        </Button>
+
         {/* Page Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4">

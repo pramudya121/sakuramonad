@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,8 @@ import {
   Calendar,
   ArrowUpRight,
   ArrowDownRight,
-  RefreshCw
+  RefreshCw,
+  Home
 } from 'lucide-react';
 
 interface AnalyticsData {
@@ -44,6 +46,7 @@ interface CollectionAnalytics {
 }
 
 export default function Analytics() {
+  const navigate = useNavigate();
   const [timeframe, setTimeframe] = useState('24h');
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [topCollections, setTopCollections] = useState<CollectionAnalytics[]>([]);
@@ -149,6 +152,15 @@ export default function Analytics() {
       <MarketplaceHeader />
       
       <main className="container mx-auto px-4 py-6 relative z-10">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/')}
+          className="mb-6 border-border/50 hover:border-primary/50"
+        >
+          <Home className="w-4 h-4 mr-2" />
+          Back to Home
+        </Button>
+
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">

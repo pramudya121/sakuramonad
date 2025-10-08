@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +18,8 @@ import {
   Play,
   Trophy,
   Coins,
-  Sparkles
+  Sparkles,
+  Home
 } from 'lucide-react';
 
 interface GameData {
@@ -41,6 +43,7 @@ interface GameData {
 }
 
 export default function Games() {
+  const navigate = useNavigate();
   const [games, setGames] = useState<GameData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -173,6 +176,15 @@ export default function Games() {
       <MarketplaceHeader />
       
       <main className="container mx-auto px-4 py-6 relative z-10">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/')}
+          className="mb-6 border-border/50 hover:border-primary/50"
+        >
+          <Home className="w-4 h-4 mr-2" />
+          Back to Home
+        </Button>
+
         <div className="mb-8">
           <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
             Web3 Gaming Portal

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,10 +17,12 @@ import {
   Eye,
   Grid3X3,
   List,
-  Filter
+  Filter,
+  Home
 } from 'lucide-react';
 
 export default function Portfolio() {
+  const navigate = useNavigate();
   const { isConnected, address } = useWalletConnection();
   const [ownedNFTs, setOwnedNFTs] = useState<any[]>([]);
   const [watchlist, setWatchlist] = useState<any[]>([]);
@@ -68,8 +71,7 @@ export default function Portfolio() {
             *,
             nft_collections (
               name,
-              image_url,
-              floor_price
+              image_url
             ),
             marketplace_listings (
               price,
@@ -84,7 +86,7 @@ export default function Portfolio() {
 
       // Calculate portfolio stats
       const totalValue = (owned || []).reduce((sum, nft) => {
-        return sum + (nft.nft_collections?.floor_price || 0);
+        return sum + (nft.marketplace_listings?.[0]?.price || 0);
       }, 0);
 
       setPortfolioStats({
@@ -146,6 +148,15 @@ export default function Portfolio() {
         <MarketplaceHeader />
         
         <main className="container mx-auto px-4 py-8 relative z-10">
+          <Button
+            variant="outline"
+            onClick={() => navigate('/')}
+            className="mb-6 border-border/50 hover:border-primary/50"
+          >
+            <Home className="w-4 h-4 mr-2" />
+            Back to Home
+          </Button>
+
           <div className="text-center py-12">
             <Wallet className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
             <h2 className="text-2xl font-bold text-foreground mb-2">Connect Your Wallet</h2>
@@ -167,6 +178,15 @@ export default function Portfolio() {
       <MarketplaceHeader />
       
       <main className="container mx-auto px-4 py-6 relative z-10">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/')}
+          className="mb-6 border-border/50 hover:border-primary/50"
+        >
+          <Home className="w-4 h-4 mr-2" />
+          Back to Home
+        </Button>
+
         <div className="mb-8">
           <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
             My Portfolio

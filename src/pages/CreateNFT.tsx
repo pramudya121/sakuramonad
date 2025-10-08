@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,7 +22,8 @@ import {
   Plus,
   X,
   Loader2,
-  CheckCircle
+  CheckCircle,
+  Home
 } from 'lucide-react';
 
 interface NFTMetadata {
@@ -33,6 +35,7 @@ interface NFTMetadata {
 }
 
 export default function CreateNFT() {
+  const navigate = useNavigate();
   const { isConnected, address } = useWalletConnection();
   const transactionStatus = useTransactionStatus();
   const [step, setStep] = useState(1);
@@ -154,16 +157,16 @@ export default function CreateNFT() {
             // Save collection to database
             const { data: collection, error: collectionError } = await supabase
               .from('nft_collections')
-              .upsert({
+              .insert([{
                 contract_address: deployedContractAddress,
                 name: formData.collectionName,
                 symbol: formData.collectionSymbol,
                 creator_address: address,
                 royalty_percentage: formData.royaltyPercentage,
-                contract_type: formData.tokenType,
+                contract_type: formData.tokenType as 'ERC721' | 'ERC1155',
                 description: `Collection for ${formData.name}`,
                 total_supply: formData.supply
-              })
+              }])
               .select()
               .single();
 
@@ -602,6 +605,15 @@ export default function CreateNFT() {
       <MarketplaceHeader />
       
       <main className="container mx-auto px-4 py-8 relative z-10">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/')}
+          className="mb-6 border-border/50 hover:border-primary/50"
+        >
+          <Home className="w-4 h-4 mr-2" />
+          Back to Home
+        </Button>
+
         <Card className="max-w-4xl mx-auto bg-gradient-card border-border/50">
           <CardContent className="p-8">
             {renderStep()}
