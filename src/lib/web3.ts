@@ -13,39 +13,24 @@ export const MONAD_TESTNET = {
   blockExplorerUrls: ['https://testnet.monadexplorer.com'],
 };
 
-// Marketplace Contract Configuration
+// NeuraNFT Marketplace Contract Configuration
 export const MARKETPLACE_CONFIG = {
-  address: '0x4c045b5936841361ed4EDbA1ADd80fce4363dE8B',
+  address: '0x338CC1718C23cc067d087F4Cbfc6248c8Dd74588',
   abi: [
     {
       "inputs": [
         {
           "internalType": "address",
-          "name": "nft",
+          "name": "to",
           "type": "address"
         },
         {
           "internalType": "uint256",
           "name": "tokenId",
           "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "offerId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bool",
-          "name": "isERC1155",
-          "type": "bool"
         }
       ],
-      "name": "acceptOffer",
+      "name": "approve",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -53,11 +38,18 @@ export const MARKETPLACE_CONFIG = {
     {
       "inputs": [
         {
-          "internalType": "address payable",
-          "name": "_feeRecipient",
-          "type": "address"
+          "internalType": "uint256",
+          "name": "listingId",
+          "type": "uint256"
         }
       ],
+      "name": "buyNFT",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "stateMutability": "nonpayable",
       "type": "constructor"
     },
@@ -67,7 +59,58 @@ export const MARKETPLACE_CONFIG = {
         {
           "indexed": true,
           "internalType": "uint256",
-          "name": "id",
+          "name": "listingId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "buyer",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "totalPrice",
+          "type": "uint256"
+        }
+      ],
+      "name": "Bought",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "listingId",
+          "type": "uint256"
+        }
+      ],
+      "name": "cancelListing",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newFee",
+          "type": "uint256"
+        }
+      ],
+      "name": "FeeUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "listingId",
           "type": "uint256"
         },
         {
@@ -77,336 +120,10 @@ export const MARKETPLACE_CONFIG = {
           "type": "address"
         },
         {
-          "indexed": true,
-          "internalType": "address",
-          "name": "nft",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "reserve",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint64",
-          "name": "start",
-          "type": "uint64"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint64",
-          "name": "end",
-          "type": "uint64"
-        },
-        {
-          "indexed": false,
-          "internalType": "bool",
-          "name": "is1155",
-          "type": "bool"
-        }
-      ],
-      "name": "AuctionCreated",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "id",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "winner",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        }
-      ],
-      "name": "AuctionSettled",
-      "type": "event"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "id",
-          "type": "uint256"
-        }
-      ],
-      "name": "bid",
-      "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "id",
-          "type": "uint256"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "bidder",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        }
-      ],
-      "name": "BidPlaced",
-      "type": "event"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "id",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        }
-      ],
-      "name": "buy",
-      "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "nft",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "offerId",
-          "type": "uint256"
-        }
-      ],
-      "name": "cancelOffer",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "nft",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bool",
-          "name": "isERC1155",
-          "type": "bool"
-        },
-        {
-          "internalType": "uint64",
-          "name": "startTime",
-          "type": "uint64"
-        },
-        {
-          "internalType": "uint64",
-          "name": "endTime",
-          "type": "uint64"
-        },
-        {
-          "internalType": "uint256",
-          "name": "reservePrice",
-          "type": "uint256"
-        }
-      ],
-      "name": "createAuction",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "id",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "uint96",
-          "name": "feeBps",
-          "type": "uint96"
-        },
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "feeRecipient",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint96",
-          "name": "maxRoyaltyBps",
-          "type": "uint96"
-        }
-      ],
-      "name": "FeeConfigUpdated",
-      "type": "event"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "nft",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "pricePerUnit",
-          "type": "uint256"
-        }
-      ],
-      "name": "list1155",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "id",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "nft",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "price",
-          "type": "uint256"
-        }
-      ],
-      "name": "list721",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "id",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "id",
-          "type": "uint256"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "seller",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "nft",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
           "indexed": false,
           "internalType": "uint256",
           "name": "price",
           "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "bool",
-          "name": "is1155",
-          "type": "bool"
         }
       ],
       "name": "Listed",
@@ -418,25 +135,19 @@ export const MARKETPLACE_CONFIG = {
         {
           "indexed": true,
           "internalType": "uint256",
-          "name": "id",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "newPrice",
+          "name": "listingId",
           "type": "uint256"
         }
       ],
-      "name": "ListingUpdated",
+      "name": "ListingCancelled",
       "type": "event"
     },
     {
       "inputs": [
         {
-          "internalType": "address",
-          "name": "nft",
-          "type": "address"
+          "internalType": "uint8",
+          "name": "standardFlag",
+          "type": "uint8"
         },
         {
           "internalType": "uint256",
@@ -445,235 +156,144 @@ export const MARKETPLACE_CONFIG = {
         },
         {
           "internalType": "uint256",
-          "name": "amount",
+          "name": "quantity",
           "type": "uint256"
         },
         {
-          "internalType": "uint64",
-          "name": "expiry",
-          "type": "uint64"
-        },
-        {
-          "internalType": "bool",
-          "name": "isERC1155",
-          "type": "bool"
-        }
-      ],
-      "name": "makeOffer",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "offerId",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "payable",
-      "type": "function"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "nft",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        },
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "offerId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "seller",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "buyer",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "totalPaid",
-          "type": "uint256"
-        }
-      ],
-      "name": "OfferAccepted",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "nft",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        },
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "offerId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "buyer",
-          "type": "address"
-        }
-      ],
-      "name": "OfferCancelled",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "nft",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        },
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "offerId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "buyer",
-          "type": "address"
-        },
-        {
-          "indexed": false,
           "internalType": "uint256",
           "name": "price",
           "type": "uint256"
+        }
+      ],
+      "name": "listNFT",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
         },
         {
-          "indexed": false,
+          "indexed": true,
           "internalType": "uint256",
-          "name": "amount",
+          "name": "tokenId",
           "type": "uint256"
         },
         {
           "indexed": false,
-          "internalType": "uint64",
-          "name": "expiry",
-          "type": "uint64"
+          "internalType": "uint256",
+          "name": "quantity",
+          "type": "uint256"
+        }
+      ],
+      "name": "Mint1155",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
         },
         {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "Mint721",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "uri",
+          "type": "string"
+        }
+      ],
+      "name": "mintNFT",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "uri",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "mintNFT1155",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
           "indexed": false,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnerUpdated",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "operator",
+          "type": "address"
+        },
+        {
           "internalType": "bool",
-          "name": "is1155",
+          "name": "approved",
           "type": "bool"
         }
       ],
-      "name": "OfferMade",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "previousOwner",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "newOwner",
-          "type": "address"
-        }
-      ],
-      "name": "OwnershipTransferred",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "id",
-          "type": "uint256"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "buyer",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "totalPaid",
-          "type": "uint256"
-        }
-      ],
-      "name": "Purchased",
-      "type": "event"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint96",
-          "name": "_feeBps",
-          "type": "uint96"
-        },
-        {
-          "internalType": "address payable",
-          "name": "_recipient",
-          "type": "address"
-        },
-        {
-          "internalType": "uint96",
-          "name": "_maxRoyaltyBps",
-          "type": "uint96"
-        }
-      ],
-      "name": "setFeeConfig",
+      "name": "setApprovalForAll",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -682,75 +302,11 @@ export const MARKETPLACE_CONFIG = {
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "id",
+          "name": "bps",
           "type": "uint256"
         }
       ],
-      "name": "settle",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "newOwner",
-          "type": "address"
-        }
-      ],
-      "name": "transferOwnership",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "id",
-          "type": "uint256"
-        }
-      ],
-      "name": "unlist",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "id",
-          "type": "uint256"
-        }
-      ],
-      "name": "Unlisted",
-      "type": "event"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "id",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "newPrice",
-          "type": "uint256"
-        }
-      ],
-      "name": "updateListingPrice",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "withdraw",
+      "name": "setMarketplaceFee",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -771,77 +327,45 @@ export const MARKETPLACE_CONFIG = {
           "type": "uint256"
         }
       ],
-      "name": "Withdrawn",
+      "name": "Withdraw",
       "type": "event"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "fallback"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "updateOwner",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "withdrawProceeds",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
       "stateMutability": "payable",
       "type": "receive"
     },
     {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "auctions",
+      "inputs": [],
+      "name": "baseURI1155",
       "outputs": [
         {
-          "internalType": "address",
-          "name": "seller",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "nft",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bool",
-          "name": "isERC1155",
-          "type": "bool"
-        },
-        {
-          "internalType": "uint64",
-          "name": "startTime",
-          "type": "uint64"
-        },
-        {
-          "internalType": "uint64",
-          "name": "endTime",
-          "type": "uint64"
-        },
-        {
-          "internalType": "uint256",
-          "name": "reservePrice",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "highestBidder",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "highestBid",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bool",
-          "name": "settled",
-          "type": "bool"
+          "internalType": "string",
+          "name": "",
+          "type": "string"
         }
       ],
       "stateMutability": "view",
@@ -849,25 +373,12 @@ export const MARKETPLACE_CONFIG = {
     },
     {
       "inputs": [],
-      "name": "feeBps",
+      "name": "baseURI721",
       "outputs": [
         {
-          "internalType": "uint96",
+          "internalType": "string",
           "name": "",
-          "type": "uint96"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "feeRecipient",
-      "outputs": [
-        {
-          "internalType": "address payable",
-          "name": "",
-          "type": "address"
+          "type": "string"
         }
       ],
       "stateMutability": "view",
@@ -884,14 +395,9 @@ export const MARKETPLACE_CONFIG = {
       "name": "listings",
       "outputs": [
         {
-          "internalType": "address",
-          "name": "seller",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "nft",
-          "type": "address"
+          "internalType": "enum NeuraNFTMarketplace.Standard",
+          "name": "standard",
+          "type": "uint8"
         },
         {
           "internalType": "uint256",
@@ -900,18 +406,18 @@ export const MARKETPLACE_CONFIG = {
         },
         {
           "internalType": "uint256",
-          "name": "amount",
+          "name": "quantity",
           "type": "uint256"
         },
         {
           "internalType": "uint256",
-          "name": "price",
+          "name": "pricePerToken",
           "type": "uint256"
         },
         {
-          "internalType": "bool",
-          "name": "isERC1155",
-          "type": "bool"
+          "internalType": "address",
+          "name": "seller",
+          "type": "address"
         },
         {
           "internalType": "bool",
@@ -924,176 +430,28 @@ export const MARKETPLACE_CONFIG = {
     },
     {
       "inputs": [],
-      "name": "maxRoyaltyBps",
+      "name": "marketplaceFeeBps",
       "outputs": [
         {
-          "internalType": "uint96",
+          "internalType": "uint256",
           "name": "",
-          "type": "uint96"
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "offers",
+      "inputs": [],
+      "name": "nextListingId",
       "outputs": [
         {
-          "internalType": "address",
-          "name": "buyer",
-          "type": "address"
-        },
-        {
           "internalType": "uint256",
-          "name": "price",
+          "name": "",
           "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint64",
-          "name": "expiry",
-          "type": "uint64"
-        },
-        {
-          "internalType": "bool",
-          "name": "isERC1155",
-          "type": "bool"
         }
       ],
       "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256[]",
-          "name": "",
-          "type": "uint256[]"
-        },
-        {
-          "internalType": "uint256[]",
-          "name": "",
-          "type": "uint256[]"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        }
-      ],
-      "name": "onERC1155BatchReceived",
-      "outputs": [
-        {
-          "internalType": "bytes4",
-          "name": "",
-          "type": "bytes4"
-        }
-      ],
-      "stateMutability": "pure",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        }
-      ],
-      "name": "onERC1155Received",
-      "outputs": [
-        {
-          "internalType": "bytes4",
-          "name": "",
-          "type": "bytes4"
-        }
-      ],
-      "stateMutability": "pure",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        }
-      ],
-      "name": "onERC721Received",
-      "outputs": [
-        {
-          "internalType": "bytes4",
-          "name": "",
-          "type": "bytes4"
-        }
-      ],
-      "stateMutability": "pure",
       "type": "function"
     },
     {
@@ -1112,12 +470,31 @@ export const MARKETPLACE_CONFIG = {
     {
       "inputs": [
         {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "ownerOf",
+      "outputs": [
+        {
           "internalType": "address",
           "name": "",
           "type": "address"
         }
       ],
-      "name": "pending",
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "pendingWithdrawals",
       "outputs": [
         {
           "internalType": "uint256",
@@ -1128,70 +505,71 @@ export const MARKETPLACE_CONFIG = {
       "stateMutability": "view",
       "type": "function"
     }
-  ],
+  ]
 };
 
 // Web3 Provider Management
 export class Web3Manager {
   private provider: ethers.BrowserProvider | null = null;
   private signer: ethers.JsonRpcSigner | null = null;
-  private marketplaceContract: ethers.Contract | null = null;
+  private contract: ethers.Contract | null = null;
+  private currentAccount: string | null = null;
 
-  // Connect to wallet and switch to Monad Testnet - Requires wallet confirmation
-  async connectWallet(walletType: 'metamask' | 'okx'): Promise<string | null> {
+  // Connect wallet
+  async connectWallet(walletType: 'metamask' | 'okx' = 'metamask'): Promise<string | null> {
     try {
-      let ethereum: any;
-      
-      if (walletType === 'metamask') {
-        ethereum = (window as any).ethereum;
-      } else if (walletType === 'okx') {
-        ethereum = (window as any).okxwallet;
-      }
-
+      const ethereum = (window as any).ethereum;
       if (!ethereum) {
-        throw new Error(`${walletType} wallet not found`);
+        throw new Error('Please install MetaMask or OKX Wallet!');
       }
 
-      // Request account access - This triggers wallet confirmation popup
+      // Request account access
       const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-      
-      if (accounts.length === 0) {
-        throw new Error('No accounts found');
-      }
+      this.currentAccount = accounts[0];
 
-      // Setup provider and signer
+      // Initialize provider
       this.provider = new ethers.BrowserProvider(ethereum);
       this.signer = await this.provider.getSigner();
 
-      // Add/Switch to Monad Testnet - This triggers network switch confirmation
-      await this.switchToMonadTestnet(ethereum);
+      // Switch to Monad Testnet
+      await this.switchToMonadTestnet();
 
       // Initialize marketplace contract
-      this.marketplaceContract = new ethers.Contract(
+      this.contract = new ethers.Contract(
         MARKETPLACE_CONFIG.address,
         MARKETPLACE_CONFIG.abi,
         this.signer
       );
 
-      return accounts[0];
+      console.log('Connected to wallet:', this.currentAccount);
+      return this.currentAccount;
     } catch (error) {
-      console.error('Failed to connect wallet:', error);
+      console.error('Error connecting wallet:', error);
       throw error;
     }
   }
 
-  private async switchToMonadTestnet(ethereum: any): Promise<void> {
+  private async switchToMonadTestnet() {
+    const ethereum = (window as any).ethereum;
     try {
       await ethereum.request({
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: MONAD_TESTNET.chainId }],
       });
     } catch (switchError: any) {
-      // Chain not added, try to add it
+      // Chain not added yet
       if (switchError.code === 4902) {
         await ethereum.request({
           method: 'wallet_addEthereumChain',
-          params: [MONAD_TESTNET],
+          params: [
+            {
+              chainId: MONAD_TESTNET.chainId,
+              chainName: MONAD_TESTNET.chainName,
+              nativeCurrency: MONAD_TESTNET.nativeCurrency,
+              rpcUrls: MONAD_TESTNET.rpcUrls,
+              blockExplorerUrls: MONAD_TESTNET.blockExplorerUrls,
+            },
+          ],
         });
       } else {
         throw switchError;
@@ -1199,113 +577,248 @@ export class Web3Manager {
     }
   }
 
-  // List ERC721 NFT - Requires wallet confirmation  
+  // Mint NFT (ERC721)
+  async mintNFT(to: string, uri: string): Promise<string> {
+    if (!this.contract) throw new Error('Contract not initialized');
+    
+    try {
+      const tx = await this.contract.mintNFT(to, uri);
+      const receipt = await tx.wait();
+      
+      // Listen for Mint721 event to get tokenId
+      const event = receipt.logs.find((log: any) => {
+        try {
+          const parsed = this.contract!.interface.parseLog(log);
+          return parsed?.name === 'Mint721';
+        } catch {
+          return false;
+        }
+      });
+      
+      console.log('NFT minted successfully:', receipt.hash);
+      return receipt.hash;
+    } catch (error) {
+      console.error('Error minting NFT:', error);
+      throw error;
+    }
+  }
+
+  // Mint NFT1155 (ERC1155)
+  async mintNFT1155(to: string, uri: string, amount: string): Promise<string> {
+    if (!this.contract) throw new Error('Contract not initialized');
+    
+    try {
+      const tx = await this.contract.mintNFT1155(to, uri, amount);
+      const receipt = await tx.wait();
+      
+      console.log('NFT1155 minted successfully:', receipt.hash);
+      return receipt.hash;
+    } catch (error) {
+      console.error('Error minting NFT1155:', error);
+      throw error;
+    }
+  }
+
+  // List NFT for sale
+  async listNFT(standardFlag: number, tokenId: string, quantity: string, price: string): Promise<string> {
+    if (!this.contract) throw new Error('Contract not initialized');
+    
+    try {
+      const priceInWei = ethers.parseEther(price);
+      const tx = await this.contract.listNFT(standardFlag, tokenId, quantity, priceInWei);
+      const receipt = await tx.wait();
+      
+      console.log('NFT listed successfully:', receipt.hash);
+      return receipt.hash;
+    } catch (error) {
+      console.error('Error listing NFT:', error);
+      throw error;
+    }
+  }
+
+  // Buy NFT from listing
+  async buyNFT(listingId: string, price: string): Promise<string> {
+    if (!this.contract) throw new Error('Contract not initialized');
+    
+    try {
+      const priceInWei = ethers.parseEther(price);
+      const tx = await this.contract.buyNFT(listingId, { value: priceInWei });
+      const receipt = await tx.wait();
+      
+      console.log('NFT purchased successfully:', receipt.hash);
+      return receipt.hash;
+    } catch (error) {
+      console.error('Error buying NFT:', error);
+      throw error;
+    }
+  }
+
+  // Cancel listing
+  async cancelListing(listingId: string): Promise<string> {
+    if (!this.contract) throw new Error('Contract not initialized');
+    
+    try {
+      const tx = await this.contract.cancelListing(listingId);
+      const receipt = await tx.wait();
+      
+      console.log('Listing cancelled successfully:', receipt.hash);
+      return receipt.hash;
+    } catch (error) {
+      console.error('Error cancelling listing:', error);
+      throw error;
+    }
+  }
+
+  // Withdraw proceeds from sales
+  async withdrawProceeds(): Promise<string> {
+    if (!this.contract) throw new Error('Contract not initialized');
+    
+    try {
+      const tx = await this.contract.withdrawProceeds();
+      const receipt = await tx.wait();
+      
+      console.log('Proceeds withdrawn successfully:', receipt.hash);
+      return receipt.hash;
+    } catch (error) {
+      console.error('Error withdrawing proceeds:', error);
+      throw error;
+    }
+  }
+
+  // Approve NFT for marketplace
+  async approveNFT(to: string, tokenId: string): Promise<string> {
+    if (!this.contract) throw new Error('Contract not initialized');
+    
+    try {
+      const tx = await this.contract.approve(to, tokenId);
+      const receipt = await tx.wait();
+      
+      console.log('NFT approved successfully:', receipt.hash);
+      return receipt.hash;
+    } catch (error) {
+      console.error('Error approving NFT:', error);
+      throw error;
+    }
+  }
+
+  // Set approval for all NFTs
+  async setApprovalForAll(operator: string, approved: boolean): Promise<string> {
+    if (!this.contract) throw new Error('Contract not initialized');
+    
+    try {
+      const tx = await this.contract.setApprovalForAll(operator, approved);
+      const receipt = await tx.wait();
+      
+      console.log('Approval for all set successfully:', receipt.hash);
+      return receipt.hash;
+    } catch (error) {
+      console.error('Error setting approval for all:', error);
+      throw error;
+    }
+  }
+
+  // Get listing details
+  async getListing(listingId: string) {
+    if (!this.contract) throw new Error('Contract not initialized');
+    
+    try {
+      const listing = await this.contract.listings(listingId);
+      return {
+        standard: listing.standard,
+        tokenId: listing.tokenId.toString(),
+        quantity: listing.quantity.toString(),
+        pricePerToken: ethers.formatEther(listing.pricePerToken),
+        seller: listing.seller,
+        active: listing.active
+      };
+    } catch (error) {
+      console.error('Error getting listing:', error);
+      throw error;
+    }
+  }
+
+  // Get pending withdrawals for an address
+  async getPendingWithdrawals(address: string): Promise<string> {
+    if (!this.contract) throw new Error('Contract not initialized');
+    
+    try {
+      const amount = await this.contract.pendingWithdrawals(address);
+      return ethers.formatEther(amount);
+    } catch (error) {
+      console.error('Error getting pending withdrawals:', error);
+      throw error;
+    }
+  }
+
+  // Get marketplace fee
+  async getMarketplaceFee(): Promise<string> {
+    if (!this.contract) throw new Error('Contract not initialized');
+    
+    try {
+      const fee = await this.contract.marketplaceFeeBps();
+      return fee.toString();
+    } catch (error) {
+      console.error('Error getting marketplace fee:', error);
+      throw error;
+    }
+  }
+
+  // Get owner of a token
+  async getOwnerOf(tokenId: string): Promise<string> {
+    if (!this.contract) throw new Error('Contract not initialized');
+    
+    try {
+      return await this.contract.ownerOf(tokenId);
+    } catch (error) {
+      console.error('Error getting token owner:', error);
+      throw error;
+    }
+  }
+
+  // Get next listing ID
+  async getNextListingId(): Promise<string> {
+    if (!this.contract) throw new Error('Contract not initialized');
+    
+    try {
+      const id = await this.contract.nextListingId();
+      return id.toString();
+    } catch (error) {
+      console.error('Error getting next listing ID:', error);
+      throw error;
+    }
+  }
+
+  // Legacy methods for backwards compatibility
   async listNFT721(nftContract: string, tokenId: string, price: string): Promise<string> {
-    if (!this.marketplaceContract) throw new Error('Marketplace contract not initialized');
-    
-    const priceInWei = ethers.parseEther(price);
-    // This transaction will trigger wallet confirmation popup
-    const tx = await this.marketplaceContract.list721(nftContract, tokenId, priceInWei);
-    
-    console.log('Transaction submitted:', tx.hash);
-    
-    // Wait for confirmation - shows pending status to user
-    const receipt = await tx.wait();
-    console.log('Transaction confirmed:', receipt.transactionHash);
-    
-    return tx.hash;
+    // NeuraNFT contract doesn't support external NFT contracts
+    // This is a unified contract that handles both minting and marketplace
+    return this.listNFT(0, tokenId, '1', price); // standardFlag 0 = ERC721
   }
 
   async listNFT1155(nftContract: string, tokenId: string, amount: string, pricePerUnit: string): Promise<string> {
-    if (!this.marketplaceContract) throw new Error('Marketplace contract not initialized');
-    
-    const priceInWei = ethers.parseEther(pricePerUnit);
-    const tx = await this.marketplaceContract.list1155(nftContract, tokenId, amount, priceInWei);
-    return tx.hash;
+    return this.listNFT(1, tokenId, amount, pricePerUnit); // standardFlag 1 = ERC1155
   }
 
-  // Buy NFT - Requires wallet confirmation
-  async buyNFT(listingId: string, amount: string, totalPrice: string): Promise<string> {
-    if (!this.marketplaceContract) throw new Error('Marketplace contract not initialized');
-    
-    const priceInWei = ethers.parseEther(totalPrice);
-    // This transaction will trigger wallet confirmation popup 
-    const tx = await this.marketplaceContract.buy(listingId, amount, { value: priceInWei });
-    
-    console.log('Purchase transaction submitted:', tx.hash);
-    
-    // Wait for confirmation
-    const receipt = await tx.wait();
-    console.log('Purchase transaction confirmed:', receipt.transactionHash);
-    
-    return tx.hash;
-  }
-
-  // Make offer - Requires wallet confirmation
   async makeOffer(nftContract: string, tokenId: string, amount: string, expiry: number, isERC1155: boolean, offerPrice: string): Promise<string> {
-    if (!this.marketplaceContract) throw new Error('Marketplace contract not initialized');
-    
-    const priceInWei = ethers.parseEther(offerPrice);
-    // This transaction will trigger wallet confirmation popup
-    const tx = await this.marketplaceContract.makeOffer(
-      nftContract,
-      tokenId,
-      amount,
-      expiry,
-      isERC1155,
-      { value: priceInWei }
-    );
-    
-    console.log('Offer transaction submitted:', tx.hash);
-    
-    // Wait for confirmation
-    const receipt = await tx.wait();
-    console.log('Offer transaction confirmed:', receipt.transactionHash);
-    
-    return tx.hash;
+    // This contract doesn't have makeOffer function, throw appropriate error
+    throw new Error('This marketplace does not support offers. Please use direct purchase instead.');
   }
 
   async acceptOffer(nftContract: string, tokenId: string, offerId: string, amount: string, isERC1155: boolean): Promise<string> {
-    if (!this.marketplaceContract) throw new Error('Marketplace contract not initialized');
-    
-    const tx = await this.marketplaceContract.acceptOffer(nftContract, tokenId, offerId, amount, isERC1155);
-    return tx.hash;
+    throw new Error('This marketplace does not support offers. Please use direct purchase instead.');
   }
 
   async bidOnAuction(auctionId: string, bidAmount: string): Promise<string> {
-    if (!this.marketplaceContract) throw new Error('Marketplace contract not initialized');
-    
-    const bidInWei = ethers.parseEther(bidAmount);
-    const tx = await this.marketplaceContract.bid(auctionId, { value: bidInWei });
-    return tx.hash;
+    throw new Error('This marketplace does not support auctions yet.');
   }
 
-  async createAuction(
-    nftContract: string,
-    tokenId: string,
-    amount: string,
-    isERC1155: boolean,
-    startTime: number,
-    endTime: number,
-    reservePrice: string
-  ): Promise<string> {
-    if (!this.marketplaceContract) throw new Error('Marketplace contract not initialized');
-    
-    const reservePriceInWei = ethers.parseEther(reservePrice);
-    const tx = await this.marketplaceContract.createAuction(
-      nftContract,
-      tokenId,
-      amount,
-      isERC1155,
-      startTime,
-      endTime,
-      reservePriceInWei
-    );
-    return tx.hash;
+  async createAuction(nftContract: string, tokenId: string, amount: string, isERC1155: boolean, startTime: number, endTime: number, reservePrice: string): Promise<string> {
+    throw new Error('This marketplace does not support auctions yet.');
   }
 
+  // Getters
   getContract(): ethers.Contract | null {
-    return this.marketplaceContract;
+    return this.contract;
   }
 
   getSigner(): ethers.JsonRpcSigner | null {
@@ -1317,19 +830,32 @@ export class Web3Manager {
   }
 
   async getCurrentAccount(): Promise<string | null> {
+    if (this.currentAccount) return this.currentAccount;
+    
     try {
-      if (!this.signer) return null;
-      return await this.signer.getAddress();
+      const ethereum = (window as any).ethereum;
+      if (!ethereum) return null;
+      
+      const accounts = await ethereum.request({ method: 'eth_accounts' });
+      this.currentAccount = accounts[0] || null;
+      return this.currentAccount;
     } catch (error) {
-      console.error('Failed to get current account:', error);
+      console.error('Error getting current account:', error);
       return null;
     }
   }
 
   get isConnected(): boolean {
-    return this.provider !== null && this.signer !== null;
+    return !!this.currentAccount && !!this.provider && !!this.signer;
   }
 }
 
 // Global instance
 export const web3Manager = new Web3Manager();
+
+// TypeScript declarations
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
