@@ -139,8 +139,7 @@ export const NFTMarketplace: React.FC<NFTMarketplaceProps> = ({
         
         // Execute real on-chain transaction - This will trigger MetaMask/OKX confirmation
         const txHash = await web3Manager.buyNFT(
-          activeListing.listing_id.toString(),
-          activeListing.price.toString()
+          activeListing.listing_id.toString()
         );
 
         return txHash;
@@ -186,11 +185,9 @@ export const NFTMarketplace: React.FC<NFTMarketplaceProps> = ({
         toast.info('Preparing offer transaction...', { id: 'offer-tx' });
 
         const txHash = await web3Manager.makeOffer(
-          nft.nft_collections?.contract_address || '',
+          0, // standardFlag: 0 for ERC721, 1 for ERC1155
           nft.token_id || '',
           "1",
-          Math.floor(Date.now() / 1000) + (24 * 60 * 60),
-          false,
           offerAmount
         );
 

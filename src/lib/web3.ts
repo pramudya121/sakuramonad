@@ -15,8 +15,31 @@ export const MONAD_TESTNET = {
 
 // NeuraNFT Marketplace Contract Configuration
 export const MARKETPLACE_CONFIG = {
-  address: '0x338CC1718C23cc067d087F4Cbfc6248c8Dd74588',
+  address: '0x61CDe79896EC26777EC34De209341A98CC846378',
   abi: [
+    {
+      "inputs": [
+        {
+          "internalType": "uint8",
+          "name": "standardFlag",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "buyer",
+          "type": "address"
+        }
+      ],
+      "name": "acceptOffer",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
     {
       "inputs": [
         {
@@ -87,6 +110,24 @@ export const MARKETPLACE_CONFIG = {
         }
       ],
       "name": "cancelListing",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint8",
+          "name": "standardFlag",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "cancelOffer",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -168,6 +209,29 @@ export const MARKETPLACE_CONFIG = {
       "name": "listNFT",
       "outputs": [],
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint8",
+          "name": "standardFlag",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "quantity",
+          "type": "uint256"
+        }
+      ],
+      "name": "makeOffer",
+      "outputs": [],
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -266,6 +330,105 @@ export const MARKETPLACE_CONFIG = {
       ],
       "stateMutability": "nonpayable",
       "type": "function"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "seller",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "buyer",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint8",
+          "name": "standard",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "totalPrice",
+          "type": "uint256"
+        }
+      ],
+      "name": "OfferAccepted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "buyer",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint8",
+          "name": "standard",
+          "type": "uint8"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "OfferCancelled",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "buyer",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint8",
+          "name": "standard",
+          "type": "uint8"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "quantity",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        }
+      ],
+      "name": "OfferMade",
+      "type": "event"
     },
     {
       "anonymous": false,
@@ -455,6 +618,60 @@ export const MARKETPLACE_CONFIG = {
       "type": "function"
     },
     {
+      "inputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "offers",
+      "outputs": [
+        {
+          "internalType": "enum NeuraNFTMarketplace.Standard",
+          "name": "standard",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "quantity",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "pricePerToken",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "buyer",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "active",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [],
       "name": "owner",
       "outputs": [
@@ -637,12 +854,15 @@ export class Web3Manager {
   }
 
   // Buy NFT from listing
-  async buyNFT(listingId: string, price: string): Promise<string> {
+  async buyNFT(listingId: string): Promise<string> {
     if (!this.contract) throw new Error('Contract not initialized');
     
     try {
-      const priceInWei = ethers.parseEther(price);
-      const tx = await this.contract.buyNFT(listingId, { value: priceInWei });
+      // Get listing details to calculate price
+      const listing = await this.getListing(listingId);
+      const totalPrice = ethers.parseEther(listing.pricePerToken) * BigInt(listing.quantity);
+      
+      const tx = await this.contract.buyNFT(listingId, { value: totalPrice });
       const receipt = await tx.wait();
       
       console.log('NFT purchased successfully:', receipt.hash);
@@ -799,13 +1019,74 @@ export class Web3Manager {
     return this.listNFT(1, tokenId, amount, pricePerUnit); // standardFlag 1 = ERC1155
   }
 
-  async makeOffer(nftContract: string, tokenId: string, amount: string, expiry: number, isERC1155: boolean, offerPrice: string): Promise<string> {
-    // This contract doesn't have makeOffer function, throw appropriate error
-    throw new Error('This marketplace does not support offers. Please use direct purchase instead.');
+  // Make offer on NFT
+  async makeOffer(standardFlag: number, tokenId: string, quantity: string, offerPrice: string): Promise<string> {
+    if (!this.contract) throw new Error('Contract not initialized');
+    
+    try {
+      const priceInWei = ethers.parseEther(offerPrice);
+      const totalPrice = priceInWei * BigInt(quantity);
+      const tx = await this.contract.makeOffer(standardFlag, tokenId, quantity, { value: totalPrice });
+      const receipt = await tx.wait();
+      
+      console.log('Offer made successfully:', receipt.hash);
+      return receipt.hash;
+    } catch (error) {
+      console.error('Error making offer:', error);
+      throw error;
+    }
   }
 
-  async acceptOffer(nftContract: string, tokenId: string, offerId: string, amount: string, isERC1155: boolean): Promise<string> {
-    throw new Error('This marketplace does not support offers. Please use direct purchase instead.');
+  // Accept offer on NFT (seller only)
+  async acceptOffer(standardFlag: number, tokenId: string, buyerAddress: string): Promise<string> {
+    if (!this.contract) throw new Error('Contract not initialized');
+    
+    try {
+      const tx = await this.contract.acceptOffer(standardFlag, tokenId, buyerAddress);
+      const receipt = await tx.wait();
+      
+      console.log('Offer accepted successfully:', receipt.hash);
+      return receipt.hash;
+    } catch (error) {
+      console.error('Error accepting offer:', error);
+      throw error;
+    }
+  }
+
+  // Cancel offer on NFT (buyer only)
+  async cancelOffer(standardFlag: number, tokenId: string): Promise<string> {
+    if (!this.contract) throw new Error('Contract not initialized');
+    
+    try {
+      const tx = await this.contract.cancelOffer(standardFlag, tokenId);
+      const receipt = await tx.wait();
+      
+      console.log('Offer cancelled successfully:', receipt.hash);
+      return receipt.hash;
+    } catch (error) {
+      console.error('Error cancelling offer:', error);
+      throw error;
+    }
+  }
+
+  // Get offer details
+  async getOffer(standardFlag: number, tokenId: string, buyerAddress: string) {
+    if (!this.contract) throw new Error('Contract not initialized');
+    
+    try {
+      const offer = await this.contract.offers(standardFlag, tokenId, buyerAddress);
+      return {
+        standard: offer.standard,
+        tokenId: offer.tokenId.toString(),
+        quantity: offer.quantity.toString(),
+        pricePerToken: ethers.formatEther(offer.pricePerToken),
+        buyer: offer.buyer,
+        active: offer.active
+      };
+    } catch (error) {
+      console.error('Error getting offer:', error);
+      throw error;
+    }
   }
 
   async bidOnAuction(auctionId: string, bidAmount: string): Promise<string> {

@@ -7,11 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useWalletConnection } from '@/hooks/useWalletConnection';
+import { OffersManager } from '@/components/OffersManager';
 import { MarketplaceHeader } from '@/components/MarketplaceHeader';
 import { SakuraBackground } from '@/components/SakuraBackground';
 import { NFTCard } from '@/components/NFTCard';
 import {
   Wallet,
+  Tag,
   Home,
   Grid3X3,
   ShoppingBag,
@@ -298,7 +300,7 @@ export default function Profile() {
 
         {/* Tabs */}
         <Tabs defaultValue="owned" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="owned" className="flex items-center">
               <Grid3X3 className="w-4 h-4 mr-2" />
               Owned ({ownedNFTs.length})
@@ -306,6 +308,10 @@ export default function Profile() {
             <TabsTrigger value="listed" className="flex items-center">
               <ShoppingBag className="w-4 h-4 mr-2" />
               Listed ({listedNFTs.length})
+            </TabsTrigger>
+            <TabsTrigger value="offers" className="flex items-center">
+              <Tag className="w-4 h-4 mr-2" />
+              Offers
             </TabsTrigger>
             <TabsTrigger value="activity" className="flex items-center">
               <Activity className="w-4 h-4 mr-2" />
@@ -387,6 +393,10 @@ export default function Profile() {
                 <p className="text-muted-foreground">List your NFTs to start selling</p>
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="offers">
+            <OffersManager />
           </TabsContent>
 
           <TabsContent value="activity">
