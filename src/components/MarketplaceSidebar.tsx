@@ -5,19 +5,11 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import {
   Store,
-  Rocket,
-  Gavel,
   Zap,
-  BarChart3,
   Star,
   Wallet,
-  Eye,
-  Gamepad2,
-  Coins,
-  Bitcoin,
   Palette,
   Users,
-  Sparkles,
   Filter,
   Grid3X3,
   List
@@ -32,44 +24,24 @@ interface MarketplaceSidebarProps {
 
 const sidebarSections = [
   {
-    title: 'Marketplace & Trading',
+    title: 'Marketplace',
     items: [
       { id: 'marketplace', label: 'Buy & Sell', icon: Store, badge: 'Hot' },
-      { id: 'launchpad', label: 'Launchpad', icon: Rocket, badge: 'New' },
-      { id: 'bidding', label: 'Bidding', icon: Gavel },
-      { id: 'sweep', label: 'Sweep Tool', icon: Zap },
-      { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+      { id: 'trending', label: 'Trending', icon: Star },
+      { id: 'live-feed', label: 'Live Feed', icon: Zap, badge: 'New' },
     ]
   },
   {
-    title: 'NFT Management',
+    title: 'My NFTs',
     items: [
-      { id: 'rarity', label: 'Rarity Tools', icon: Star },
       { id: 'portfolio', label: 'Portfolio', icon: Wallet },
-      { id: 'watchlist', label: 'Watchlist', icon: Eye },
+      { id: 'profile', label: 'Profile', icon: Users },
     ]
   },
   {
-    title: 'Web3 Gaming',
-    items: [
-      { id: 'games', label: 'Game Portal', icon: Gamepad2, badge: 'Gaming' },
-      { id: 'game-launchpad', label: 'Game Launch', icon: Sparkles },
-      { id: 'items', label: 'Game Items', icon: Coins },
-    ]
-  },
-  {
-    title: 'Ordinals & Bitcoin',
-    items: [
-      { id: 'ordinals', label: 'Bitcoin NFTs', icon: Bitcoin, badge: 'BTC' },
-      { id: 'brc20', label: 'BRC-20 Tokens', icon: Coins },
-    ]
-  },
-  {
-    title: 'Creator Tools',
+    title: 'Create',
     items: [
       { id: 'create', label: 'Mint NFTs', icon: Palette },
-      { id: 'royalties', label: 'Royalties', icon: Users },
-      { id: 'community', label: 'Community', icon: Users },
     ]
   }
 ];
@@ -149,15 +121,17 @@ export const MarketplaceSidebar: React.FC<MarketplaceSidebarProps> = ({
                         }
                       `}
                       onClick={() => {
-                        // Navigate to specific pages for certain sections
-                        if (item.id === 'analytics') {
-                          window.location.href = '/analytics';
-                        } else if (item.id === 'create') {
+                        // Navigate to specific pages
+                        if (item.id === 'create') {
                           window.location.href = '/create';
-                        } else if (item.id === 'games') {
-                          window.location.href = '/games';
                         } else if (item.id === 'portfolio') {
                           window.location.href = '/portfolio';
+                        } else if (item.id === 'profile') {
+                          window.location.href = '/profile';
+                        } else if (item.id === 'trending') {
+                          window.location.href = '/trending';
+                        } else if (item.id === 'live-feed') {
+                          window.location.href = '/live-feed';
                         } else {
                           onSectionChange(item.id);
                         }
