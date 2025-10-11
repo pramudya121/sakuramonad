@@ -796,11 +796,22 @@ export class Web3Manager {
 
   // Mint NFT (ERC721)
   async mintNFT(to: string, uri: string): Promise<string> {
-    if (!this.contract) throw new Error('Contract not initialized');
+    if (!this.contract) {
+      throw new Error('Contract not initialized. Please connect your wallet first.');
+    }
+    
+    if (!this.signer) {
+      throw new Error('Wallet not connected. Please connect your wallet.');
+    }
     
     try {
+      console.log('Minting ERC721 NFT to:', to, 'with URI:', uri);
+      
       const tx = await this.contract.mintNFT(to, uri);
+      console.log('Transaction submitted:', tx.hash);
+      
       const receipt = await tx.wait();
+      console.log('Transaction confirmed:', receipt.hash);
       
       // Listen for Mint721 event to get tokenId
       const event = receipt.logs.find((log: any) => {
@@ -812,27 +823,62 @@ export class Web3Manager {
         }
       });
       
+      if (event) {
+        console.log('Mint721 event found:', event);
+      }
+      
       console.log('NFT minted successfully:', receipt.hash);
       return receipt.hash;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error minting NFT:', error);
-      throw error;
+      
+      // Provide more detailed error messages
+      if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
+        throw new Error('Transaction was rejected by user');
+      } else if (error.code === 'INSUFFICIENT_FUNDS' || error.code === -32000) {
+        throw new Error('Insufficient MON balance for gas fees');
+      } else if (error.message?.includes('network')) {
+        throw new Error('Network error. Please check your connection to Monad Testnet');
+      } else {
+        throw new Error(error.message || 'Failed to mint NFT');
+      }
     }
   }
 
   // Mint NFT1155 (ERC1155)
   async mintNFT1155(to: string, uri: string, amount: string): Promise<string> {
-    if (!this.contract) throw new Error('Contract not initialized');
+    if (!this.contract) {
+      throw new Error('Contract not initialized. Please connect your wallet first.');
+    }
+    
+    if (!this.signer) {
+      throw new Error('Wallet not connected. Please connect your wallet.');
+    }
     
     try {
+      console.log('Minting ERC1155 NFT to:', to, 'with URI:', uri, 'amount:', amount);
+      
       const tx = await this.contract.mintNFT1155(to, uri, amount);
+      console.log('Transaction submitted:', tx.hash);
+      
       const receipt = await tx.wait();
+      console.log('Transaction confirmed:', receipt.hash);
       
       console.log('NFT1155 minted successfully:', receipt.hash);
       return receipt.hash;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error minting NFT1155:', error);
-      throw error;
+      
+      // Provide more detailed error messages
+      if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
+        throw new Error('Transaction was rejected by user');
+      } else if (error.code === 'INSUFFICIENT_FUNDS' || error.code === -32000) {
+        throw new Error('Insufficient MON balance for gas fees');
+      } else if (error.message?.includes('network')) {
+        throw new Error('Network error. Please check your connection to Monad Testnet');
+      } else {
+        throw new Error(error.message || 'Failed to mint NFT1155');
+      }
     }
   }
 

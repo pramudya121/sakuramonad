@@ -98,8 +98,32 @@ export default function CreateNFT() {
       return;
     }
 
+    // Validate form data
+    if (!imageFile) {
+      toast.error('Please upload an image for your NFT');
+      return;
+    }
+
+    if (!formData.name || formData.name.trim() === '') {
+      toast.error('Please enter a name for your NFT');
+      return;
+    }
+
     try {
       transactionStatus.resetState();
+      
+      // Ensure wallet is connected to web3Manager
+      if (!web3Manager.isConnected) {
+        toast.info('Connecting to wallet...', { id: 'mint-process' });
+        try {
+          await web3Manager.connectWallet('metamask');
+        } catch (connectError: any) {
+          toast.error('Failed to connect wallet', {
+            description: connectError.message || 'Please make sure your wallet is unlocked'
+          });
+          return;
+        }
+      }
       
       await transactionStatus.executeTransaction(
         async () => {
@@ -115,38 +139,57 @@ export default function CreateNFT() {
           
           let txHash: string;
           
-          if (formData.tokenType === 'ERC721') {
-            txHash = await web3Manager.mintNFT(address, metadataUrl);
-          } else {
-            txHash = await web3Manager.mintNFT1155(address, metadataUrl, formData.supply.toString());
+          try {
+            if (formData.tokenType === 'ERC721') {
+              txHash = await web3Manager.mintNFT(address, metadataUrl);
+            } else {
+              txHash = await web3Manager.mintNFT1155(address, metadataUrl, formData.supply.toString());
+            }
+          } catch (mintError: any) {
+            console.error('Minting transaction error:', mintError);
+            throw new Error(
+              mintError.message?.includes('user rejected') 
+                ? 'Transaction was rejected by user' 
+                : mintError.message || 'Failed to mint NFT. Please try again.'
+            );
           }
           
           // Get token ID from transaction receipt
-          const provider = web3Manager.getProvider();
-          if (provider) {
-            const receipt = await provider.getTransactionReceipt(txHash);
-            if (receipt) {
-              // Parse event logs to get tokenId
-              const contract = web3Manager.getContract();
-              if (contract) {
-                const eventName = formData.tokenType === 'ERC721' ? 'Mint721' : 'Mint1155';
-                for (const log of receipt.logs) {
-                  try {
-                    const parsed = contract.interface.parseLog({
-                      topics: [...log.topics],
-                      data: log.data
-                    });
-                    if (parsed?.name === eventName) {
-                      const tokenId = parsed.args.tokenId?.toString() || parsed.args[1]?.toString();
-                      setMintedTokenId(tokenId);
-                      break;
+          try {
+            const provider = web3Manager.getProvider();
+            if (provider) {
+              toast.info('Waiting for transaction confirmation...', { id: 'mint-process' });
+              const receipt = await provider.getTransactionReceipt(txHash);
+              if (receipt) {
+                // Parse event logs to get tokenId
+                const contract = web3Manager.getContract();
+                if (contract) {
+                  const eventName = formData.tokenType === 'ERC721' ? 'Mint721' : 'Mint1155';
+                  for (const log of receipt.logs) {
+                    try {
+                      const parsed = contract.interface.parseLog({
+                        topics: [...log.topics],
+                        data: log.data
+                      });
+                      if (parsed?.name === eventName) {
+                        const tokenId = parsed.args.tokenId?.toString() || parsed.args[1]?.toString();
+                        if (tokenId) {
+                          setMintedTokenId(tokenId);
+                          console.log('Token ID extracted:', tokenId);
+                        }
+                        break;
+                      }
+                    } catch (parseError) {
+                      // Skip logs that can't be parsed
+                      console.log('Could not parse log, continuing...');
                     }
-                  } catch (e) {
-                    // Skip logs that can't be parsed
                   }
                 }
               }
             }
+          } catch (receiptError) {
+            console.warn('Could not get token ID from receipt:', receiptError);
+            // Don't throw error, just log warning - minting was successful
           }
           
           // Store metadata URL for later use
@@ -165,9 +208,10 @@ export default function CreateNFT() {
               .from('nft_collections')
               .select('*')
               .eq('contract_address', contractAddress)
-              .single();
+              .maybeSingle();
 
             if (!collection) {
+              console.log('Creating new collection in database...');
               const { data: newCollection, error: collectionError } = await supabase
                 .from('nft_collections')
                 .insert([{
@@ -181,26 +225,40 @@ export default function CreateNFT() {
                 .select()
                 .single();
 
-              if (collectionError) throw collectionError;
+              if (collectionError) {
+                console.error('Error creating collection:', collectionError);
+                throw collectionError;
+              }
               collection = newCollection;
+              console.log('Collection created:', collection);
             }
 
-            if (collection && mintedTokenId) {
+            if (collection) {
+              const tokenIdToUse = mintedTokenId || `temp_${Date.now()}`;
+              
               // Save NFT token
-              await supabase
+              console.log('Saving NFT token to database...');
+              const { error: tokenError } = await supabase
                 .from('nft_tokens')
                 .insert({
                   collection_id: collection.id,
-                  token_id: mintedTokenId,
+                  token_id: tokenIdToUse,
                   name: formData.name,
                   description: formData.description,
                   image_url: imagePreview,
                   metadata_url: metadataUrl,
                   owner_address: address
                 });
+                
+              if (tokenError) {
+                console.error('Error saving token:', tokenError);
+                throw tokenError;
+              }
+              console.log('NFT token saved successfully');
 
               // Record transaction
-              await supabase
+              console.log('Recording transaction...');
+              const { error: txError } = await supabase
                 .from('marketplace_transactions')
                 .insert({
                   transaction_hash: hash,
@@ -210,33 +268,51 @@ export default function CreateNFT() {
                   amount: formData.supply,
                   status: 'confirmed'
                 });
+                
+              if (txError) {
+                console.error('Error recording transaction:', txError);
+                throw txError;
+              }
+              console.log('Transaction recorded successfully');
             }
 
             toast.success('NFT minted successfully on Monad!', {
-              description: `Token ID: ${mintedTokenId}`
+              description: mintedTokenId ? `Token ID: ${mintedTokenId}` : 'Check your wallet for the new NFT'
             });
             
             setStep(3);
           } catch (dbError: any) {
             console.error('Database error:', dbError);
             toast.error('NFT minted but failed to save to database', {
-              description: dbError.message
+              description: dbError.message || 'The NFT was minted successfully on-chain'
             });
-            setStep(3); // Still show success
+            setStep(3); // Still show success since blockchain mint succeeded
           }
         },
         (error: Error) => {
-          console.error('Minting error:', error);
+          console.error('Transaction error:', error);
+          const errorMessage = error.message || 'Unknown error occurred';
+          
           toast.error('Failed to mint NFT', {
-            description: error.message
+            description: errorMessage.includes('insufficient funds') 
+              ? 'Insufficient MON balance for gas fees'
+              : errorMessage.includes('user rejected')
+              ? 'Transaction was rejected'
+              : errorMessage
           });
         }
       );
       
     } catch (error: any) {
-      console.error('Minting error:', error);
+      console.error('Minting process error:', error);
+      const errorMessage = error.message || 'An unexpected error occurred';
+      
       toast.error('Failed to start minting process', {
-        description: error.message
+        description: errorMessage.includes('wallet') 
+          ? 'Please connect your wallet and try again'
+          : errorMessage.includes('network')
+          ? 'Network error. Please check your connection'
+          : errorMessage
       });
     }
   };
